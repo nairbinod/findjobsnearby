@@ -2,6 +2,16 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+## Create a job without email auth
+
+For temporary founder-assisted seeding, set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in your local terminal only. Get the employer user ID from Supabase Authentication, then run:
+
+```text
+npm run create:job -- <employer-id> "Line Cook" "Oak & Ember Kitchen" "Fort Worth" "$18-22/hr" seasonal "Prepare orders|Work the line|Keep the kitchen organized"
+```
+
+Never put the service-role key in `.env.local` if that file could be shared, and never add it to `NEXT_PUBLIC_*` variables or Vercel client-side settings.
+
 First, run the development server:
 
 ```bash
