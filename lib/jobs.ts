@@ -12,7 +12,7 @@ export type Job = {
 
 export const jobs: Job[] = [
   {
-    id: "oak-ember-line-cook",
+    id: "demo-oak-ember-line-cook",
     title: "Line Cook",
     company: "Oak & Ember Kitchen",
     location: "Fort Worth, TX",
@@ -23,7 +23,7 @@ export const jobs: Job[] = [
     description: "Prepare ingredients, work the line during service, and keep the kitchen organized.",
   },
   {
-    id: "north-star-electrician",
+    id: "demo-north-star-electrician",
     title: "Residential Electrician",
     company: "North Star Electric",
     location: "Arlington, TX",
@@ -34,7 +34,7 @@ export const jobs: Job[] = [
     description: "Install, maintain, and repair electrical systems in residential properties.",
   },
   {
-    id: "patel-caregiver",
+    id: "demo-patel-caregiver",
     title: "After-school Caregiver",
     company: "The Patel Family",
     location: "Plano, TX",
@@ -45,7 +45,7 @@ export const jobs: Job[] = [
     description: "Pick up two children, help with homework, and prepare a simple afternoon snack.",
   },
   {
-    id: "lone-star-warehouse",
+    id: "demo-lone-star-warehouse",
     title: "Warehouse Associate",
     company: "Lone Star Supply Co.",
     location: "Dallas, TX",
