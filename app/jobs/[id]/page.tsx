@@ -2,12 +2,26 @@
 import { notFound } from "next/navigation";
 import { jobs } from "@/lib/jobs";
 import ApplyForm from "./ApplyForm";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type JobPageProps = { params: Promise<{ id: string }> };
 
 export default async function JobDetailPage({ params }: JobPageProps) {
   const { id } = await params;
-  const job = jobs.find((item) => item.id === id);
+  const demoJob = jobs.find((item) => item.id === id);
+  const supabase = await createSupabaseServerClient();
+  const { data: databaseJob } = await supabase.from("jobs").select("id, title, company_name, city, state, employment_type, pay_range, description").eq("id", id).eq("status", "published").maybeSingle();
+  const job = demoJob ?? (databaseJob ? {
+    id: databaseJob.id,
+    title: databaseJob.title,
+    company: databaseJob.company_name,
+    location: `${databaseJob.city}, ${databaseJob.state}`,
+    type: databaseJob.employment_type.replace("_", "-"),
+    pay: databaseJob.pay_range,
+    category: "Local opportunities",
+    posted: "Recently",
+    description: databaseJob.description ?? "A local opportunity from a nearby business.",
+  } : undefined);
 
   if (!job) notFound();
 

@@ -1,15 +1,37 @@
 "use client";
 /* eslint-disable @next/next/no-html-link-for-pages */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { categories, jobs } from "@/lib/jobs";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 export default function JobsPage() {
   const [category, setCategory] = useState("All jobs");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("Dallas-Fort Worth");
+  const [listedJobs, setListedJobs] = useState(jobs);
 
-  const visibleJobs = jobs.filter((job) => {
+  useEffect(() => {
+    async function loadPublishedJobs() {
+      const supabase = createSupabaseBrowserClient();
+      const { data } = await supabase.from("jobs").select("id, title, company_name, city, state, employment_type, pay_range, description, created_at").eq("status", "published").order("created_at", { ascending: false });
+      if (!data?.length) return;
+      setListedJobs(data.map((job) => ({
+        id: job.id,
+        title: job.title,
+        company: job.company_name,
+        location: `${job.city}, ${job.state}`,
+        type: job.employment_type.replace("_", "-"),
+        pay: job.pay_range,
+        category: "Local opportunities",
+        posted: "Recently",
+        description: job.description ?? "A local opportunity from a nearby business.",
+      })));
+    }
+    void loadPublishedJobs();
+  }, []);
+
+  const visibleJobs = listedJobs.filter((job) => {
     const matchesCategory = category === "All jobs" || job.category === category;
     const searchText = `${job.title} ${job.company} ${job.location}`.toLowerCase();
     return matchesCategory && searchText.includes(query.toLowerCase());
