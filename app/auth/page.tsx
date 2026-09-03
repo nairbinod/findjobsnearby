@@ -24,6 +24,12 @@ export default function AuthPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const cooldownUntil = Number(window.localStorage.getItem("findjobsnearby-auth-cooldown") ?? 0);
+    if (cooldownUntil > Date.now()) {
+      const seconds = Math.ceil((cooldownUntil - Date.now()) / 1000);
+      setMessage(`Please wait ${seconds} seconds before requesting another link.`);
+      return;
+    }
     setBusy(true);
     setMessage("");
     const supabase = createSupabaseBrowserClient();
@@ -39,6 +45,7 @@ export default function AuthPage() {
     }
 
     setMessage("Check your email for a one-time sign-in link.");
+    window.localStorage.setItem("findjobsnearby-auth-cooldown", String(Date.now() + 60_000));
     setBusy(false);
   }
 
