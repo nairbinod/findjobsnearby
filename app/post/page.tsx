@@ -25,6 +25,11 @@ export default function PostPage() {
 
   function createDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const responsibilityCount = responsibilities.split("\n").map((item) => item.trim()).filter(Boolean).length;
+    if (responsibilityCount < 3 || responsibilityCount > 5) {
+      setPublishMessage("Add 3 to 5 responsibilities, with one responsibility on each line.");
+      return;
+    }
     setDraft(true);
     setPublished(false);
     setPublishMessage("");
@@ -42,6 +47,11 @@ export default function PostPage() {
     }
 
     const responsibilityList = responsibilities.split("\n").map((item) => item.trim()).filter(Boolean);
+    if (responsibilityList.length < 3 || responsibilityList.length > 5) {
+      setPublishMessage("Add 3 to 5 responsibilities, with one responsibility on each line.");
+      setPublishing(false);
+      return;
+    }
     const { error } = await supabase.from("jobs").insert({
       employer_id: userData.user.id,
       title,
@@ -77,7 +87,7 @@ export default function PostPage() {
               <label className="block text-sm font-bold">Job title<input required value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Front desk coordinator" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
               <div className="grid gap-5 sm:grid-cols-2"><label className="block text-sm font-bold">Pay range <span className="text-[var(--coral)]">*</span><input required value={pay} onChange={(event) => setPay(event.target.value)} placeholder="e.g. $18-22/hr" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label><label className="block text-sm font-bold">Employment type<select value={type} onChange={(event) => setType(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 font-normal outline-none">{employmentTypes.map(([label, value]) => <option key={value} value={value}>{label}</option>)}</select></label></div>
               <label className="block text-sm font-bold">City or neighborhood<input required value={location} onChange={(event) => setLocation(event.target.value)} placeholder="e.g. Bishop Arts, Dallas" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
-              <label className="block text-sm font-bold">What will they do?<span className="mt-1 block text-xs font-normal text-[var(--muted)]">Add 3-5 responsibilities. One per line.</span><textarea required value={responsibilities} onChange={(event) => setResponsibilities(event.target.value)} rows={5} placeholder="Prepare daily orders\nHelp customers at the counter\nKeep the workspace organized" className="mt-2 w-full resize-none rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
+              <label className="block text-sm font-bold">What will they do?<span className="mt-1 block text-xs font-normal text-[var(--muted)]">Add 3-5 responsibilities. One per line. {responsibilities.split("\n").map((item) => item.trim()).filter(Boolean).length}/5</span><textarea required value={responsibilities} onChange={(event) => setResponsibilities(event.target.value)} rows={5} placeholder="Prepare daily orders\nHelp customers at the counter\nKeep the workspace organized" className="mt-2 w-full resize-none rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
             </div>
             <button type="submit" className="mt-8 w-full rounded-full bg-[var(--coral)] px-6 py-4 font-bold text-white shadow-[0_6px_0_#ce5a4b]">Draft my listing <span aria-hidden="true">→</span></button>
           </form>

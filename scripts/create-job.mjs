@@ -4,6 +4,7 @@ const [employerId, title, companyName, city, payRange, employmentType, responsib
 const responsibilities = (responsibilitiesText ?? "").split("|").map((item) => item.trim()).filter(Boolean);
 
 if (!employerId || !title || !companyName || !city || !payRange || !employmentType || responsibilities.length < 3 || responsibilities.length > 5) {
+  console.error("Provide 3-5 responsibilities separated with |.");
   console.error("Usage: npm run create:job -- <employer-id> <title> <company> <city> <pay-range> <full_time|part_time|contract|seasonal> <responsibility 1|responsibility 2|responsibility 3>");
   process.exit(1);
 }
