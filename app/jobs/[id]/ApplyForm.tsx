@@ -37,12 +37,23 @@ export default function ApplyForm({ jobId, jobTitle }: ApplyFormProps) {
       candidate_id: userData.user.id,
       role_title: roleTitle,
       availability,
-      work_history: workHistory,
       approved_at: approved ? new Date().toISOString() : null,
     }).select("id").single();
 
     if (profileError || !profile) {
       setMessage(profileError?.message ?? "We could not create your profile.");
+      setBusy(false);
+      return;
+    }
+
+    const { error: privateProfileError } = await supabase.from("candidate_profile_private").insert({
+      profile_id: profile.id,
+      candidate_id: userData.user.id,
+      work_history: workHistory,
+    });
+
+    if (privateProfileError) {
+      setMessage(privateProfileError.message);
       setBusy(false);
       return;
     }
