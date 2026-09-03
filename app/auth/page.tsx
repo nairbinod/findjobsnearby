@@ -11,6 +11,8 @@ export default function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    const authError = new URLSearchParams(window.location.search).get("error");
+    if (authError) setTimeout(() => setMessage(`Sign-in link error: ${authError}`), 0);
     const supabase = createSupabaseBrowserClient();
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
