@@ -28,6 +28,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         {children}
         <footer className="border-t border-[var(--line)] bg-[var(--cream)] px-6 py-4 text-center text-xs text-[var(--muted)]">
+          <div className="mb-2 flex flex-wrap justify-center gap-4 font-semibold">
+            <a href="/about">About</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a>
+          </div>
           FindJobsNearBy · Build {buildNumber} · Last updated {lastUpdated}
         </footer>
       </body>
