@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
+import { buildNumber, lastUpdated } from "@/lib/build-info";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -24,7 +25,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${dmSans.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <footer className="border-t border-[var(--line)] bg-[var(--cream)] px-6 py-4 text-center text-xs text-[var(--muted)]">
+          FindJobsNearBy · Build {buildNumber} · Last updated {lastUpdated}
+        </footer>
+      </body>
     </html>
   );
 }
