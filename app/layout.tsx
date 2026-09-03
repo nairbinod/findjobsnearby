@@ -13,6 +13,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://findjobsnearby.com"),
   title: "FindJobsNearBy | Local work, without the runaround",
   description: "Free to post and apply for local jobs across Dallas-Fort Worth.",
 };
