@@ -61,8 +61,9 @@ export default function AccountPage() {
   async function withdrawApplication(applicationId: string) {
     if (!window.confirm("Withdraw this application? The employer will see it as withdrawn.")) return;
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.from("applications").update({ withdrawn_at: new Date().toISOString() }).eq("id", applicationId);
+    const { data, error } = await supabase.from("applications").update({ withdrawn_at: new Date().toISOString() }).eq("id", applicationId).select("id");
     if (error) { setMessage(error.message); return; }
+    if (!data || data.length === 0) { setMessage("Could not withdraw this application — it may no longer belong to your account."); return; }
     setApplications((current) => current.map((application) => (application.id === applicationId ? { ...application, withdrawn_at: new Date().toISOString() } : application)));
   }
 

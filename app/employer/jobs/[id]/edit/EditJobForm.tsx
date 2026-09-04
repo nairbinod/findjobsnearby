@@ -81,7 +81,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
     setMessage("");
     const responsibilityList = responsibilities.split("\n").map((item) => item.trim()).filter(Boolean);
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.from("jobs").update({
+    const { data, error } = await supabase.from("jobs").update({
       title,
       company_name: companyName,
       city: location,
@@ -91,10 +91,19 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
       responsibilities: responsibilityList,
       description: aiDescription,
       updated_at: new Date().toISOString(),
-    }).eq("id", job.id);
+    }).eq("id", job.id).select("id");
 
-    setMessage(error ? error.message : "Changes saved.");
-    if (!error) setSaved(true);
+    // A Supabase update that RLS silently filters out (0 matching rows)
+    // returns no error -- the request is well-formed, it just didn't apply
+    // to anything from this user's perspective. Without checking that a row
+    // actually came back, this would falsely report "Changes saved."
+    if (error) {
+      setMessage(error.message);
+    } else if (!data || data.length === 0) {
+      setMessage("Could not save -- this listing may no longer belong to your account.");
+    } else {
+      setSaved(true);
+    }
     setSaving(false);
   }
 

@@ -87,8 +87,9 @@ export default function EmployerPage() {
   async function closeJob(jobId: string) {
     if (!window.confirm("Close this listing? It will stop accepting applications and disappear from search — this can't be undone.")) return;
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.from("jobs").update({ status: "closed" }).eq("id", jobId);
+    const { data, error } = await supabase.from("jobs").update({ status: "closed" }).eq("id", jobId).select("id");
     if (error) { setMessage(error.message); return; }
+    if (!data || data.length === 0) { setMessage("Could not close this listing — it may no longer belong to your account."); return; }
     setJobs((current) => current.map((job) => (job.id === jobId ? { ...job, status: "closed" } : job)));
   }
 
