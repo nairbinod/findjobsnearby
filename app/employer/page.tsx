@@ -21,6 +21,7 @@ function formatWindow(from: string | null, until: string | null) {
 export default function EmployerPage() {
   const [jobs, setJobs] = useState<EmployerJob[]>([]);
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
+  const [applicationCounts, setApplicationCounts] = useState<Record<string, number>>({});
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -33,8 +34,10 @@ export default function EmployerPage() {
     setAvailabilityFilter("");
     const supabase = createSupabaseBrowserClient();
     const { data, error } = await supabase.from("applications").select("id, created_at, candidate_profiles(id, role_title, category, availability, available_from, available_until, curated_content)").eq("job_id", jobId).order("created_at", { ascending: false });
-    if (error) setMessage(error.message);
-    else setApplicants((data as unknown as Applicant[]) ?? []);
+    if (error) { setMessage(error.message); return; }
+    const rows = (data as unknown as Applicant[]) ?? [];
+    setApplicants(rows);
+    setApplicationCounts((counts) => ({ ...counts, [jobId]: rows.length }));
   }
 
   useEffect(() => {
@@ -47,11 +50,18 @@ export default function EmployerPage() {
       setJobs(data ?? []);
       setMessage(data?.length ? "" : "You have not posted a job yet.");
 
-      const counts = await Promise.all((data ?? []).map(async (job) => {
-        const { count } = await supabase.from("job_views").select("*", { count: "exact", head: true }).eq("job_id", job.id);
-        return [job.id, count ?? 0] as const;
-      }));
-      setViewCounts(Object.fromEntries(counts));
+      const [viewCountEntries, applicationCountEntries] = await Promise.all([
+        Promise.all((data ?? []).map(async (job) => {
+          const { count } = await supabase.from("job_views").select("*", { count: "exact", head: true }).eq("job_id", job.id);
+          return [job.id, count ?? 0] as const;
+        })),
+        Promise.all((data ?? []).map(async (job) => {
+          const { count } = await supabase.from("applications").select("*", { count: "exact", head: true }).eq("job_id", job.id);
+          return [job.id, count ?? 0] as const;
+        })),
+      ]);
+      setViewCounts(Object.fromEntries(viewCountEntries));
+      setApplicationCounts(Object.fromEntries(applicationCountEntries));
     }
     void loadJobs();
   }, []);
@@ -81,7 +91,7 @@ export default function EmployerPage() {
                     <div>
                       <h3 className="text-xl font-bold">{job.title}</h3>
                       <p className="mt-1 text-sm text-[var(--muted)]">{job.company_name} · {job.city} · {job.pay_range}</p>
-                      <div className="mt-3 flex flex-wrap items-center gap-3"><span className="text-xs font-semibold uppercase tracking-wider text-[var(--coral)]">{job.status}</span><span className="text-xs text-[var(--muted)]">{viewCounts[job.id] ?? 0} unique view{(viewCounts[job.id] ?? 0) === 1 ? "" : "s"}</span></div>
+                      <div className="mt-3 flex flex-wrap items-center gap-3"><span className="text-xs font-semibold uppercase tracking-wider text-[var(--coral)]">{job.status}</span><span className="text-xs text-[var(--muted)]">{viewCounts[job.id] ?? 0} unique view{(viewCounts[job.id] ?? 0) === 1 ? "" : "s"}</span><span className="text-xs text-[var(--muted)]">· {applicationCounts[job.id] ?? 0} applicant{(applicationCounts[job.id] ?? 0) === 1 ? "" : "s"}</span></div>
                     </div>
                     <div className="flex gap-4"><button onClick={() => void showApplicants(job.id)} className="text-sm font-bold text-[var(--ink)]">Applicants →</button><a href={buildJobHref(job.id, job.title, job.city, job.state)} className="text-sm font-bold text-[var(--coral)]">View listing →</a></div>
                   </div>
