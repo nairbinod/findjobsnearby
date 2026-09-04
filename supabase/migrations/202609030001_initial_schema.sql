@@ -118,6 +118,10 @@ using (exists (
     and paid_profile_views.employer_id = auth.uid()
 ));
 
+create policy "Employers view approved candidate previews"
+on public.candidate_profiles for select to authenticated
+using (approved_at is not null);
+
 create policy "Employers view their paid profile views"
 on public.paid_profile_views for select to authenticated
 using (employer_id = auth.uid());

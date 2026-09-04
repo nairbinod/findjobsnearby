@@ -1,11 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 
-const [employerId, title, companyName, city, payRange, employmentType, responsibilitiesText] = process.argv.slice(2);
+const [employerId, title, companyName, city, payRange, employmentType, category, responsibilitiesText] = process.argv.slice(2);
 const responsibilities = (responsibilitiesText ?? "").split("|").map((item) => item.trim()).filter(Boolean);
+const allowedCategories = ["Food & hospitality", "Skilled trades", "Care & education", "Operations"];
 
-if (!employerId || !title || !companyName || !city || !payRange || !employmentType || responsibilities.length < 3 || responsibilities.length > 5) {
+if (!employerId || !title || !companyName || !city || !payRange || !employmentType || !allowedCategories.includes(category) || responsibilities.length < 3 || responsibilities.length > 5) {
   console.error("Provide 3-5 responsibilities separated with |.");
-  console.error("Usage: npm run create:job -- <employer-id> <title> <company> <city> <pay-range> <full_time|part_time|contract|seasonal> <responsibility 1|responsibility 2|responsibility 3>");
+  console.error(`Category must be one of: ${allowedCategories.join(", ")}`);
+  console.error("Usage: npm run create:job -- <employer-id> <title> <company> <city> <pay-range> <full_time|part_time|contract|seasonal> <category> <responsibility 1|responsibility 2|responsibility 3>");
   process.exit(1);
 }
 
@@ -24,6 +26,7 @@ const { error } = await supabase.from("jobs").insert({
   state: "TX",
   pay_range: payRange,
   employment_type: employmentType,
+  category,
   responsibilities,
   description: responsibilities.join(" "),
   status: "published",

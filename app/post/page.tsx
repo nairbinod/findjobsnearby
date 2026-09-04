@@ -1,103 +1,12 @@
-"use client";
-/* eslint-disable @next/next/no-html-link-for-pages */
+import type { Metadata } from "next";
+import PostForm from "./PostForm";
 
-import { FormEvent, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-
-const employmentTypes = [
-  ["Full-time", "full_time"],
-  ["Part-time", "part_time"],
-  ["Contract", "contract"],
-  ["Seasonal", "seasonal"],
-] as const;
+export const metadata: Metadata = {
+  title: "Post a Job for Free | FindJobsNearBy",
+  description: "Post a job in the Dallas-Fort Worth area for free. Share the role and let AI draft a clear listing you review and approve before it goes live.",
+  alternates: { canonical: "/post" },
+};
 
 export default function PostPage() {
-  const [draft, setDraft] = useState(false);
-  const [published, setPublished] = useState(false);
-  const [title, setTitle] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [pay, setPay] = useState("");
-  const [location, setLocation] = useState("");
-  const [type, setType] = useState("full_time");
-  const [responsibilities, setResponsibilities] = useState("");
-  const [publishMessage, setPublishMessage] = useState("");
-  const [publishing, setPublishing] = useState(false);
-
-  function createDraft(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const responsibilityCount = responsibilities.split("\n").map((item) => item.trim()).filter(Boolean).length;
-    if (responsibilityCount < 3 || responsibilityCount > 5) {
-      setPublishMessage("Add 3 to 5 responsibilities, with one responsibility on each line.");
-      return;
-    }
-    setDraft(true);
-    setPublished(false);
-    setPublishMessage("");
-  }
-
-  async function publishJob() {
-    setPublishing(true);
-    setPublishMessage("");
-    const supabase = createSupabaseBrowserClient();
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      setPublishMessage("Sign in with an employer account before publishing this listing.");
-      setPublishing(false);
-      return;
-    }
-
-    const responsibilityList = responsibilities.split("\n").map((item) => item.trim()).filter(Boolean);
-    if (responsibilityList.length < 3 || responsibilityList.length > 5) {
-      setPublishMessage("Add 3 to 5 responsibilities, with one responsibility on each line.");
-      setPublishing(false);
-      return;
-    }
-    const { error } = await supabase.from("jobs").insert({
-      employer_id: userData.user.id,
-      title,
-      company_name: companyName,
-      city: location,
-      pay_range: pay,
-      employment_type: type,
-      responsibilities: responsibilityList,
-      description: responsibilityList.join(" "),
-      status: "published",
-      ai_assisted: true,
-      approved_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    });
-
-    setPublishMessage(error ? error.message : "Your listing is live.");
-    if (!error) setPublished(true);
-    setPublishing(false);
-  }
-
-  return (
-    <div className="min-h-screen bg-[var(--cream)]">
-      <header className="mx-auto flex max-w-[1000px] items-center justify-between px-6 py-6 lg:px-10">
-        <a href="/" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></a>
-        <a href="/jobs" className="text-sm font-bold text-[var(--muted)]">Browse jobs <span aria-hidden="true">→</span></a>
-      </header>
-      <main className="mx-auto max-w-[1000px] px-6 pb-20 pt-12 lg:px-10">
-        <div className="mb-12 max-w-[650px]"><p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Free employer posting</p><h1 className="display text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">Tell us who<br />you&apos;re looking for.</h1><p className="mt-6 text-lg leading-7 text-[var(--muted)]">A few details in. A clear job listing out. You&apos;ll review everything before it goes live.</p></div>
-        <div className="grid gap-8 lg:grid-cols-[1fr_.85fr]">
-          <form onSubmit={createDraft} className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">
-            <div className="mb-8 flex items-center gap-3 text-sm font-bold"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ink)] text-white">1</span><span>Role details</span><span className="h-px flex-1 bg-[var(--line)]" /><span className="text-[var(--muted)]">Free to post</span></div>
-            <div className="space-y-5">
-              <label className="block text-sm font-bold">Business name<input required value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder="e.g. Oak & Ember Kitchen" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
-              <label className="block text-sm font-bold">Job title<input required value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Front desk coordinator" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
-              <div className="grid gap-5 sm:grid-cols-2"><label className="block text-sm font-bold">Pay range <span className="text-[var(--coral)]">*</span><input required value={pay} onChange={(event) => setPay(event.target.value)} placeholder="e.g. $18-22/hr" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label><label className="block text-sm font-bold">Employment type<select value={type} onChange={(event) => setType(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 font-normal outline-none">{employmentTypes.map(([label, value]) => <option key={value} value={value}>{label}</option>)}</select></label></div>
-              <label className="block text-sm font-bold">City or neighborhood<input required value={location} onChange={(event) => setLocation(event.target.value)} placeholder="e.g. Bishop Arts, Dallas" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
-              <label className="block text-sm font-bold">What will they do?<span className="mt-1 block text-xs font-normal text-[var(--muted)]">Add 3-5 responsibilities. One per line. {responsibilities.split("\n").map((item) => item.trim()).filter(Boolean).length}/5</span><textarea required value={responsibilities} onChange={(event) => setResponsibilities(event.target.value)} rows={5} placeholder="Prepare daily orders\nHelp customers at the counter\nKeep the workspace organized" className="mt-2 w-full resize-none rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
-            </div>
-            <button type="submit" className="mt-8 w-full rounded-full bg-[var(--coral)] px-6 py-4 font-bold text-white shadow-[0_6px_0_#ce5a4b]">Draft my listing <span aria-hidden="true">→</span></button>
-          </form>
-          <aside className="rounded-2xl border border-[var(--line)] bg-[var(--mint)] p-6 sm:p-8">
-            <div className="flex items-center justify-between"><p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--coral)]">{published ? "Published" : draft ? "Review before publishing" : "Your listing preview"}</p><span className="text-xl">✳</span></div>
-            {published ? <div className="mt-16 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--yellow)] text-2xl">✓</div><h2 className="display mt-6 text-3xl font-bold">You&apos;re live.</h2><p className="mt-3 text-sm leading-6 text-[var(--muted)]">Your listing is ready for local job seekers to discover.</p></div> : draft ? <div className="mt-10"><h2 className="display text-4xl font-bold">{title}</h2><p className="mt-2 font-semibold">{companyName} · {location} · {type.replace("_", "-")}</p><p className="mt-1 font-bold text-[var(--coral)]">{pay}</p><div className="mt-8 border-t border-[var(--ink)]/15 pt-5"><p className="text-sm leading-7">{responsibilities.split("\n").filter(Boolean).map((item) => <span className="block" key={item}>• {item}</span>)}</p></div><p className="mt-8 text-xs leading-5 text-[var(--muted)]">AI-assisted draft. Only the details you provided are included. Nothing publishes until you approve it.</p><button onClick={publishJob} disabled={publishing} className="mt-6 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white disabled:opacity-60">{publishing ? "Publishing..." : "Approve & publish"} <span aria-hidden="true">↗</span></button>{publishMessage && <p role="status" className="mt-4 text-sm leading-5 text-[var(--muted)]">{publishMessage}</p>}</div> : <div className="mt-12"><div className="h-4 w-24 rounded bg-white/70" /><div className="mt-5 h-10 w-4/5 rounded bg-white/70" /><div className="mt-3 h-4 w-2/5 rounded bg-white/70" /><div className="mt-10 space-y-3 border-t border-[var(--ink)]/10 pt-6"><div className="h-3 w-full rounded bg-white/60" /><div className="h-3 w-11/12 rounded bg-white/60" /><div className="h-3 w-4/5 rounded bg-white/60" /></div><p className="mt-12 text-sm leading-6 text-[var(--muted)]">Your approved listing will be clear, grounded in your words, and ready to share with nearby candidates.</p></div>}
-          </aside>
-        </div>
-      </main>
-    </div>
-  );
+  return <PostForm />;
 }

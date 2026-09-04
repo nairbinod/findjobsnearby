@@ -1,20 +1,24 @@
-"use client";
-/* eslint-disable @next/next/no-html-link-for-pages */
-
-import { useState } from "react";
-import { categories, jobs } from "@/lib/jobs";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { categories } from "@/lib/jobs";
+import { getAllJobs, jobHref } from "@/lib/jobs-data";
 import EmployerBanner from "@/components/EmployerBanner";
+import HomeJobsList from "@/components/HomeJobsList";
 
-export default function Home() {
-  const [filter, setFilter] = useState("All jobs");
-  const visibleJobs = filter === "All jobs" ? jobs : jobs.filter((job) => job.category === filter);
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
+export default async function Home() {
+  const jobs = (await getAllJobs()).slice(0, 8);
+  const jobHrefs = Object.fromEntries(jobs.map((job) => [job.id, jobHref(job)]));
 
   return (
     <div className="min-h-screen overflow-hidden bg-[var(--cream)]">
       <header className="mx-auto flex max-w-[1240px] items-center justify-between px-6 py-6 lg:px-10">
         <a href="#top" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></a>
-        <nav className="hidden items-center gap-8 text-sm font-semibold text-[var(--muted)] md:flex"><a href="#jobs">Find work</a><a href="#how-it-works">How it works</a><a href="/about">About</a></nav>
-        <div className="flex items-center gap-3 text-sm font-semibold"><button className="hidden px-3 py-2 text-[var(--muted)] sm:block">Sign in</button><a href="#post" className="rounded-full bg-[var(--ink)] px-5 py-3 text-white transition-transform hover:-translate-y-0.5">Post a job <span aria-hidden="true">↗</span></a></div>
+        <nav className="hidden items-center gap-8 text-sm font-semibold text-[var(--muted)] md:flex"><a href="#jobs">Find work</a><a href="#how-it-works">How it works</a><Link href="/about">About</Link></nav>
+        <div className="flex items-center gap-3 text-sm font-semibold"><Link href="/auth" className="hidden px-3 py-2 text-[var(--muted)] sm:block">Sign in</Link><Link href="/post" className="rounded-full bg-[var(--ink)] px-5 py-3 text-white transition-transform hover:-translate-y-0.5">Post a job <span aria-hidden="true">↗</span></Link></div>
       </header>
 
       <main id="top">
@@ -23,9 +27,9 @@ export default function Home() {
 
         <section className="mx-auto grid max-w-[1240px] gap-5 px-6 py-16 sm:grid-cols-3 lg:px-10" id="how-it-works"><div className="border-t-2 border-[var(--ink)] pt-4"><p className="display text-3xl font-bold">01 <span className="text-[var(--coral)]">→</span></p><h2 className="mt-5 text-lg font-bold">Search like a local</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Real jobs, in real neighborhoods, from people who are actually hiring.</p></div><div className="border-t-2 border-[var(--ink)] pt-4"><p className="display text-3xl font-bold">02 <span className="text-[var(--coral)]">→</span></p><h2 className="mt-5 text-lg font-bold">Apply in minutes</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Build a focused profile once. Use it for every role that feels right.</p></div><div className="border-t-2 border-[var(--ink)] pt-4"><p className="display text-3xl font-bold">03 <span className="text-[var(--coral)]">→</span></p><h2 className="mt-5 text-lg font-bold">Get a real response</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">We help local businesses and local people connect directly.</p></div></section>
 
-        <section id="jobs" className="bg-white px-6 py-16 lg:px-10"><div className="mx-auto max-w-[1240px]"><div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"><div><p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Fresh in the neighborhood</p><h2 className="display text-4xl font-bold tracking-[-.03em] sm:text-5xl">Jobs worth getting up for.</h2></div><a href="/jobs" className="text-sm font-bold underline decoration-[var(--coral)] decoration-2 underline-offset-4">View all jobs <span aria-hidden="true">→</span></a></div><div className="mt-9 flex gap-2 overflow-x-auto pb-2">{categories.map((item) => <button key={item} onClick={() => setFilter(item)} className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${filter === item ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--ink)] hover:text-[var(--ink)]"}`}>{item}</button>)}</div><div className="mt-5 grid gap-4 md:grid-cols-2">{visibleJobs.map((job, index) => <article key={job.title} className="group grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-[var(--line)] p-5 transition-all hover:-translate-y-1 hover:border-[var(--ink)] hover:shadow-lg"><div className={`flex h-12 w-12 items-center justify-center rounded-xl text-xl ${index === 0 ? "bg-[#ffe0d5]" : index === 1 ? "bg-[var(--mint)]" : index === 2 ? "bg-[var(--yellow)]" : "bg-[#dce9ed]"}`} aria-hidden="true">{index === 0 ? "✦" : index === 1 ? "⌁" : index === 2 ? "♡" : "▦"}</div><div><h3 className="font-bold">{job.title}</h3><p className="mt-1 text-sm text-[var(--muted)]">{job.company} · {job.location}</p><div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold"><span className="rounded bg-[var(--cream)] px-2 py-1">{job.type}</span><span className="rounded bg-[var(--cream)] px-2 py-1">{job.pay}</span></div></div><span className="self-start text-xs text-[var(--muted)]">{job.posted}</span></article>)}</div></div></section>
+        <section id="jobs" className="bg-white px-6 py-16 lg:px-10"><div className="mx-auto max-w-[1240px]"><div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"><div><p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Fresh in the neighborhood</p><h2 className="display text-4xl font-bold tracking-[-.03em] sm:text-5xl">Jobs worth getting up for.</h2></div><Link href="/jobs" className="text-sm font-bold underline decoration-[var(--coral)] decoration-2 underline-offset-4">View all jobs <span aria-hidden="true">→</span></Link></div><HomeJobsList jobs={jobs} categories={categories} jobHrefs={jobHrefs} /></div></section>
 
-        <section id="post" className="mx-4 my-16 overflow-hidden rounded-[24px] bg-[var(--ink)] px-6 py-12 text-white sm:px-12 lg:mx-10 lg:px-20"><div className="grid items-center gap-8 lg:grid-cols-[1fr_auto]"><div><p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[var(--yellow)]">For the people doing the hiring</p><h2 className="display max-w-[650px] text-4xl font-bold leading-tight sm:text-5xl">Your next great hire might live five minutes away.</h2><p className="mt-5 max-w-[570px] leading-7 text-white/70">Post for free. Tell us what you need. Our AI helps you turn a few quick notes into a clear listing you can approve and share.</p></div><a href="#post" className="rounded-full bg-[var(--yellow)] px-7 py-4 text-center font-bold text-[var(--ink)] transition-transform hover:-translate-y-0.5">Post a job for free <span aria-hidden="true">↗</span></a></div></section>
+        <section id="post" className="mx-4 my-16 overflow-hidden rounded-[24px] bg-[var(--ink)] px-6 py-12 text-white sm:px-12 lg:mx-10 lg:px-20"><div className="grid items-center gap-8 lg:grid-cols-[1fr_auto]"><div><p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[var(--yellow)]">For the people doing the hiring</p><h2 className="display max-w-[650px] text-4xl font-bold leading-tight sm:text-5xl">Your next great hire might live five minutes away.</h2><p className="mt-5 max-w-[570px] leading-7 text-white/70">Post for free. Tell us what you need. Our AI helps you turn a few quick notes into a clear listing you can approve and share.</p></div><Link href="/post" className="rounded-full bg-[var(--yellow)] px-7 py-4 text-center font-bold text-[var(--ink)] transition-transform hover:-translate-y-0.5">Post a job for free <span aria-hidden="true">↗</span></Link></div></section>
       </main>
     </div>
   );
