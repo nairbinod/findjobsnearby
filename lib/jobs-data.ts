@@ -21,6 +21,7 @@ type DbJobRow = {
   pay_range: string;
   category: string | null;
   description: string | null;
+  responsibilities: string[] | null;
   created_at: string;
   expires_at: string | null;
 };
@@ -39,6 +40,7 @@ function fromDbRow(row: DbJobRow): Job {
     postedAt: row.created_at,
     expiresAt: row.expires_at,
     description: row.description ?? "A local opportunity from a nearby business.",
+    responsibilities: row.responsibilities ?? [],
   };
 }
 
@@ -49,7 +51,7 @@ export async function getAllJobs(): Promise<Job[]> {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("jobs")
-    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, created_at, expires_at")
+    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at")
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
@@ -67,7 +69,7 @@ export async function getJobBySlug(slug: string): Promise<Job | undefined> {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("jobs")
-    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, created_at, expires_at")
+    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at")
     .eq("id", idMatch[0])
     .eq("status", "published")
     .maybeSingle();

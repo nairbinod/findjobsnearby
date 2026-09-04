@@ -36,6 +36,7 @@ export async function GET(request: Request) {
     postedAt: new Date().toISOString(),
     expiresAt: null,
     description: "",
+    responsibilities: [],
   }));
 
   let sent = 0;

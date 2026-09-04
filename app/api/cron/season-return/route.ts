@@ -55,6 +55,7 @@ export async function GET(request: Request) {
       postedAt: now.toISOString(),
       expiresAt: null,
       description: "",
+      responsibilities: [],
     };
     jobsByCategory.set(row.category, [...(jobsByCategory.get(row.category) ?? []), job]);
   }

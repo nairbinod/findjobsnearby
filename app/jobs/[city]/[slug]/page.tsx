@@ -121,7 +121,10 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
               <p className="mt-4 max-w-[650px] text-base leading-8 text-[var(--muted)]">{job.description}</p>
               <p className="mt-5 max-w-[650px] text-base leading-8 text-[var(--muted)]">This is a local opportunity from a small business in {job.city}, {job.state}. Apply with a focused profile and hear directly from the employer.</p>
             </div>
-            {!isDemoJob && <div className="mt-8"><ReportButton targetType="job" targetId={job.id} /></div>}
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <a href={`/api/jobs/${job.id}/share-card`} className="text-xs font-semibold text-[var(--muted)] underline decoration-dotted underline-offset-4 hover:text-[var(--ink)]">Download shareable image ↓</a>
+              {!isDemoJob && <ReportButton targetType="job" targetId={job.id} />}
+            </div>
           </article>
           <aside className="h-fit rounded-2xl bg-[var(--ink)] p-6 text-white">
             <p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--yellow)]">Ready to apply?</p>
