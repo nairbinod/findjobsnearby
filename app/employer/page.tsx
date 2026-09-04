@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { buildJobHref } from "@/lib/geo";
 import ReportButton from "@/components/ReportButton";
+import MessageThread from "@/components/MessageThread";
 import AuthNav from "@/components/AuthNav";
 
 type EmployerJob = { id: string; title: string; company_name: string; city: string; state: string; pay_range: string; status: string; created_at: string; expires_at: string | null; urgent: boolean };
@@ -30,6 +31,7 @@ export default function EmployerPage() {
   const [availabilityFilter, setAvailabilityFilter] = useState("");
   const [message, setMessage] = useState("Loading your jobs...");
 
+  const [employerId, setEmployerId] = useState("");
   const [freeViewsUsed, setFreeViewsUsed] = useState(0);
   const [unlockedCandidateIds, setUnlockedCandidateIds] = useState<Set<string>>(new Set());
   const [unlockedDetails, setUnlockedDetails] = useState<Record<string, UnlockedDetails>>({});
@@ -110,6 +112,7 @@ export default function EmployerPage() {
       const supabase = createSupabaseBrowserClient();
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) { setMessage("Sign in with your employer account to manage jobs."); return; }
+      setEmployerId(userData.user.id);
       const [{ data, error }, { data: unlocks }, { data: account }] = await Promise.all([
         supabase.from("jobs").select("id, title, company_name, city, state, pay_range, status, created_at, expires_at, urgent").eq("employer_id", userData.user.id).order("created_at", { ascending: false }),
         supabase.from("paid_profile_views").select("candidate_id").eq("employer_id", userData.user.id),
@@ -224,7 +227,11 @@ export default function EmployerPage() {
                                       </>
                                     ) : <p className="text-[var(--muted)]">Loading details...</p>}
                                   </div>
-                                ) : isWithdrawn ? (
+                                ) : null}
+                                {isUnlocked && employerId && (
+                                  <MessageThread employerId={employerId} candidateId={applicant.candidate_id} viewerId={employerId} counterpartLabel="candidate" />
+                                )}
+                                {!isUnlocked && (isWithdrawn ? (
                                   <p className="mt-4 text-xs text-[var(--muted)]">This candidate withdrew their application.</p>
                                 ) : (
                                   <div className="mt-4 flex items-center justify-between gap-3">
@@ -233,7 +240,7 @@ export default function EmployerPage() {
                                     </button>
                                     {profile && <ReportButton targetType="profile" targetId={profile.id} label="Report profile" />}
                                   </div>
-                                )}
+                                ))}
                               </div>
                             );
                           })}

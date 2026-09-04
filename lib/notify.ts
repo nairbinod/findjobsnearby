@@ -122,6 +122,40 @@ export async function notifySeasonReturn(candidateId: string, jobs: Job[]) {
   for (const job of unseen) await logNotification(admin, "season_return", candidateId, job.id);
 }
 
+/** US-18: notify the recipient of a new in-app message. One email per
+ * message (not digested) -- matches how notifyNewApplication fires per
+ * application, and message volume between an unlocked pair is low. */
+export async function notifyNewMessage(messageId: string) {
+  const admin = createSupabaseAdminClient();
+
+  const { data: message } = await admin.from("messages").select("id, employer_id, candidate_id, sender_id, body").eq("id", messageId).maybeSingle();
+  if (!message) return;
+
+  const recipientId = message.sender_id === message.employer_id ? message.candidate_id : message.employer_id;
+  if (await alreadyNotified(admin, "new_message", recipientId, message.id)) return;
+  const recipientIsEmployer = recipientId === message.employer_id;
+
+  const { data: recipientUser } = await admin.auth.admin.getUserById(recipientId);
+  const recipientEmail = recipientUser.user?.email;
+  if (!recipientEmail) return;
+
+  const preview = message.body.length > 200 ? `${message.body.slice(0, 200)}…` : message.body;
+
+  await getResendClient().emails.send({
+    from: NOTIFICATIONS_FROM,
+    to: recipientEmail,
+    subject: "You have a new message",
+    html: wrap(
+      "New message on FindJobsNearBy",
+      `<h1 style="font-size:22px;color:#152d2a;margin:0 0 12px;">New message.</h1>
+       <p style="font-size:15px;line-height:1.6;color:#152d2a;font-style:italic;">&ldquo;${preview}&rdquo;</p>
+       <a href="${SITE_URL}/${recipientIsEmployer ? "employer" : "account"}" style="display:inline-block;margin-top:16px;background:#152d2a;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:700;font-size:14px;">Reply →</a>`,
+    ),
+  });
+
+  await logNotification(admin, "new_message", recipientId, message.id);
+}
+
 /** US-31: warn an employer before their listing(s) auto-expire, so they can
  * renew instead of the listing silently disappearing from search. */
 export async function notifyListingRenewal(employerId: string, jobs: Job[]) {
