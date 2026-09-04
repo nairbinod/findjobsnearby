@@ -5,6 +5,7 @@ import { getAllJobs, jobHref } from "@/lib/jobs-data";
 import { TX_METROS, DFW_METRO_CITIES } from "@/lib/geo";
 import { timeAgo } from "@/lib/time";
 import { extractHourlyRate } from "@/lib/pay";
+import AuthNav from "@/components/AuthNav";
 
 const PAY_OPTIONS = [
   { value: "", label: "Any pay" },
@@ -65,7 +66,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList).replace(/</g, "\\u003c") }} />
       <header className="mx-auto flex max-w-[1240px] items-center justify-between px-6 py-6 lg:px-10">
         <Link href="/" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></Link>
-        <Link href="/post" className="rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Post a job <span aria-hidden="true">↗</span></Link>
+        <div className="flex items-center gap-5"><AuthNav /><Link href="/post" className="rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Post a job <span aria-hidden="true">↗</span></Link></div>
       </header>
       <main className="mx-auto max-w-[1240px] px-6 pb-20 lg:px-10">
         <div className="border-b border-[var(--line)] pb-12 pt-12"><p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">The local job board</p><h1 className="display max-w-[700px] text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">Find your next<br /><em className="font-normal text-[var(--coral)]">nearby.</em></h1><p className="mt-6 max-w-[520px] text-lg leading-7 text-[var(--muted)]">Fresh opportunities from small businesses across Dallas-Fort Worth.</p></div>

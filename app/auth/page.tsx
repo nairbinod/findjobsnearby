@@ -44,7 +44,7 @@ export default function AuthPage() {
     const supabase = createSupabaseBrowserClient();
     const result = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`, data: { role } },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${role === "employer" ? "/employer" : "/account"}`, data: { role } },
     });
 
     if (result.error) {

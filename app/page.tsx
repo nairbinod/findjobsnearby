@@ -6,6 +6,7 @@ import { timeAgo } from "@/lib/time";
 import EmployerBanner from "@/components/EmployerBanner";
 import HomeJobsList from "@/components/HomeJobsList";
 import JobAlertSignup from "@/components/JobAlertSignup";
+import AuthNav from "@/components/AuthNav";
 
 const title = "FindJobsNearBy | Local work, without the runaround";
 const description = "Free to post and apply for local jobs across Dallas-Fort Worth, Texas. Small businesses post AI-assisted listings at no cost; job seekers apply for free.";
@@ -29,7 +30,7 @@ export default async function Home() {
       <header className="mx-auto flex max-w-[1240px] items-center justify-between px-6 py-6 lg:px-10">
         <a href="#top" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></a>
         <nav className="hidden items-center gap-8 text-sm font-semibold text-[var(--muted)] md:flex"><a href="#jobs">Find work</a><a href="#how-it-works">How it works</a><Link href="/about">About</Link></nav>
-        <div className="flex items-center gap-3 text-sm font-semibold"><Link href="/auth" className="hidden px-3 py-2 text-[var(--muted)] sm:block">Sign in</Link><Link href="/post" className="rounded-full bg-[var(--ink)] px-5 py-3 text-white transition-transform hover:-translate-y-0.5">Post a job <span aria-hidden="true">↗</span></Link></div>
+        <div className="flex items-center gap-4 text-sm font-semibold"><AuthNav /><Link href="/post" className="rounded-full bg-[var(--ink)] px-5 py-3 text-white transition-transform hover:-translate-y-0.5">Post a job <span aria-hidden="true">↗</span></Link></div>
       </header>
 
       <main id="top">

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { buildJobHref } from "@/lib/geo";
 import { containsContactInfo, CONTACT_INFO_MESSAGE } from "@/lib/contact-guard";
+import AuthNav from "@/components/AuthNav";
 
 const employmentTypes = [
   ["Full-time", "full_time"],
@@ -128,7 +129,7 @@ export default function PostForm() {
     <div className="min-h-screen bg-[var(--cream)]">
       <header className="mx-auto flex max-w-[1000px] items-center justify-between px-6 py-6 lg:px-10">
         <a href="/" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></a>
-        <a href="/jobs" className="text-sm font-bold text-[var(--muted)]">Browse jobs <span aria-hidden="true">→</span></a>
+        <div className="flex items-center gap-5"><AuthNav /><a href="/jobs" className="text-sm font-bold text-[var(--muted)]">Browse jobs <span aria-hidden="true">→</span></a></div>
       </header>
       <main className="mx-auto max-w-[1000px] px-6 pb-20 pt-12 lg:px-10">
         <div className="mb-12 max-w-[650px]"><p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Free employer posting</p><h1 className="display text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">Tell us who<br />you&apos;re looking for.</h1><p className="mt-6 text-lg leading-7 text-[var(--muted)]">A few details in. A clear job listing out. You&apos;ll review everything before it goes live.</p></div>

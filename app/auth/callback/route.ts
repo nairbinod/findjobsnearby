@@ -19,11 +19,13 @@ export async function GET(request: Request) {
     }
 
     if (data.user) {
-      const { data: account } = await supabase.from("accounts").select("id").eq("id", data.user.id).maybeSingle();
+      const selectedRole = data.user.user_metadata.role ?? "candidate";
+      const { data: account } = await supabase.from("accounts").select("id, role").eq("id", data.user.id).maybeSingle();
+
       if (!account) {
         const { error: accountError } = await supabase.from("accounts").insert({
           id: data.user.id,
-          role: data.user.user_metadata.role ?? "candidate",
+          role: selectedRole,
         });
         if (accountError) {
           const errorUrl = new URL("/auth", requestUrl.origin);
@@ -33,6 +35,13 @@ export async function GET(request: Request) {
 
         const referralCode = (await cookies()).get(REFERRAL_COOKIE)?.value;
         if (referralCode) await recordReferral(supabase, referralCode, data.user.id);
+      } else if (account.role !== selectedRole) {
+        // A returning user picked the other role toggle -- e.g. someone who
+        // first signed up to browse jobs (candidate) now wants to post one
+        // (employer). Without this, they'd be silently stuck as whatever
+        // role they picked the very first time, with jobs inserts failing
+        // RLS forever.
+        await supabase.from("accounts").update({ role: selectedRole }).eq("id", data.user.id);
       }
     }
   }

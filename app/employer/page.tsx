@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { buildJobHref } from "@/lib/geo";
 import ReportButton from "@/components/ReportButton";
+import AuthNav from "@/components/AuthNav";
 
 type EmployerJob = { id: string; title: string; company_name: string; city: string; state: string; pay_range: string; status: string; created_at: string; expires_at: string | null };
 type Applicant = { id: string; created_at: string; candidate_id: string; withdrawn_at: string | null; candidate_profiles: { id: string; role_title: string; category: string | null; availability: string | null; available_from: string | null; available_until: string | null; curated_content: string | null }[] };
@@ -139,7 +140,7 @@ export default function EmployerPage() {
 
   return (
     <div className="min-h-screen bg-[var(--cream)]">
-      <header className="mx-auto flex max-w-[1100px] items-center justify-between px-6 py-6 lg:px-10"><a href="/" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></a><a href="/post" className="rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Post a job <span aria-hidden="true">↗</span></a></header>
+      <header className="mx-auto flex max-w-[1100px] items-center justify-between px-6 py-6 lg:px-10"><a href="/" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></a><div className="flex items-center gap-5"><AuthNav /><a href="/post" className="rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Post a job <span aria-hidden="true">↗</span></a></div></header>
       <main className="mx-auto max-w-[1100px] px-6 pb-20 pt-12 lg:px-10">
         <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Employer workspace</p>
         <h1 className="display text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">Your local<br />hiring board.</h1>
