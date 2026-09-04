@@ -23,7 +23,7 @@ A free-to-post, free-to-apply job marketplace for Texas small businesses. Employ
 |---|---|---|
 | Month 1–2 (seed) | Active job listings in launch city | 50+ |
 | Month 1–2 (seed) | Applications per active listing | 5+ |
-| Month 3–6 | Paid contact conversion rate (jobs that buy ≥1 view) | Track vs. 35% model assumption |
+| Month 3–6 | Paid contact conversion rate (jobs that buy ≥1 view, excluding views covered by the free-trial allowance in US-53) | Track vs. 35% model assumption |
 | Month 3–6 | Employer month-2 retention (repeat posting) | Track — feeds Phase 2 pricing |
 | Month 6 | Organic (non-paid) traffic share | Track — validates SEO investment |
 | Month 1+ | Subscription attach rate among repeat employers | Track vs. CAC payback model |
@@ -80,9 +80,11 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
 
 - **US-15:** As an employer, I want to browse applicants' AI-curated profiles for free, so I can decide who's worth contacting before paying anything.
 - **US-16:** As an employer, I want to pay $2.99 to view a specific candidate's full profile and open messaging, so I only pay once I've found someone worth talking to.
-  - *AC:* No candidate contact info is visible anywhere pre-payment. Paying to view a profile unlocks it for me permanently, even if it resurfaces through another of my own job posts.
+  - *AC:* No candidate contact info is visible anywhere pre-payment. Paying to view a profile unlocks it for me permanently, even if it resurfaces through another of my own job posts. The first two views are free per US-53, before this $2.99 charge ever applies.
 - **US-17:** As an employer, I want to buy discounted credit packs (5 views for $10, or 10 views for $20), so I save money contacting multiple candidates.
 - **US-18:** As an employer, I want in-app messaging with a candidate once I've paid to view their profile, so we can communicate directly.
+- **US-53:** As a new employer, I want my first 2 profile views to be free, so I can try the paid-contact flow before spending anything.
+  - *AC:* The allowance is scoped to the employer's account, not per job post — posting additional jobs does not reset or multiply it, and it is a one-time lifetime allowance, not renewed monthly. A free-trial view unlocks the candidate's profile and messaging exactly like a paid one (US-16) — same permanent access, just $0 charged; it is not a separate or time-limited access mode. Once both free views are used, every subsequent view costs $2.99, or draws from a credit pack (US-17) or Growth's included views (US-36) if the employer has either. Applies uniformly regardless of tier — it's the trial hook that runs before any paid plan, not a Growth perk.
 
 ### 4.7 Job boosting
 
@@ -146,7 +148,7 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
   - *AC:* "Analytics" here means trends over time and view-to-application conversion rate — the basic unique-view count itself (US-21a) is free for everyone, not a Growth-exclusive.
 - **US-37:** As a Growth subscriber, I want overage views beyond my 25 included to bill at a discounted rate, so I'm not cut off in a busy month.
 
-**Pitch line:** *"Free to post and apply — $2.99 to view an application, or go Growth for $39.99/month and get 25 views included plus team tools."*
+**Pitch line:** *"Free to post and apply, plus your first 2 candidate views are on us — after that it's $2.99 to view an application, or go Growth for $39.99/month and get 25 views included plus team tools."*
 
 ### 4.17 Company & legal pages
 
