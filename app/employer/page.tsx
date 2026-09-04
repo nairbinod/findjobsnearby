@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-type EmployerJob = { id: string; title: string; company_name: string; city: string; pay_range: string; status: string; created_at: string };
+type EmployerJob = { id: string; title: string; company_name: string; city: string; pay_range: string; status: string; created_at: string; expires_at: string | null };
 type Applicant = { id: string; created_at: string; candidate_profiles: { role_title: string; availability: string | null; curated_content: string | null }[] };
 
 export default function EmployerPage() {
@@ -26,7 +26,7 @@ export default function EmployerPage() {
       const supabase = createSupabaseBrowserClient();
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) { setMessage("Sign in with your employer account to manage jobs."); return; }
-      const { data, error } = await supabase.from("jobs").select("id, title, company_name, city, pay_range, status, created_at").eq("employer_id", userData.user.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("jobs").select("id, title, company_name, city, pay_range, status, created_at, expires_at").eq("employer_id", userData.user.id).order("created_at", { ascending: false });
       if (error) setMessage(error.message);
       else { setJobs(data ?? []); setMessage(data?.length ? "" : "You have not posted a job yet."); }
     }

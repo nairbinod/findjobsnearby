@@ -64,6 +64,7 @@ export default function PostPage() {
       status: "published",
       ai_assisted: true,
       approved_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     });
 
     setPublishMessage(error ? error.message : "Your listing is live.");
