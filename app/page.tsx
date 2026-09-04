@@ -27,7 +27,6 @@ export default function Home() {
 
         <section id="post" className="mx-4 my-16 overflow-hidden rounded-[24px] bg-[var(--ink)] px-6 py-12 text-white sm:px-12 lg:mx-10 lg:px-20"><div className="grid items-center gap-8 lg:grid-cols-[1fr_auto]"><div><p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[var(--yellow)]">For the people doing the hiring</p><h2 className="display max-w-[650px] text-4xl font-bold leading-tight sm:text-5xl">Your next great hire might live five minutes away.</h2><p className="mt-5 max-w-[570px] leading-7 text-white/70">Post for free. Tell us what you need. Our AI helps you turn a few quick notes into a clear listing you can approve and share.</p></div><a href="#post" className="rounded-full bg-[var(--yellow)] px-7 py-4 text-center font-bold text-[var(--ink)] transition-transform hover:-translate-y-0.5">Post a job for free <span aria-hidden="true">↗</span></a></div></section>
       </main>
-      <footer id="about" className="mx-auto flex max-w-[1240px] flex-col justify-between gap-4 px-6 pb-10 text-sm text-[var(--muted)] sm:flex-row lg:px-10"><p>© 2026 FindJobsNearBy · Dallas–Fort Worth, TX</p><div className="flex gap-5"><a href="#about">About</a><a href="#about">Privacy</a><a href="#about">Terms</a></div></footer>
     </div>
   );
 }
