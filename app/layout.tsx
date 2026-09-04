@@ -26,6 +26,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${dmSans.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "FindJobsNearBy",
+          url: "https://findjobsnearby.com",
+          description: "A Texas local job marketplace for small businesses and nearby job seekers.",
+          email: "support@findjobsnearby.com",
+        }).replace(/</g, "\\u003c") }} />
         {children}
         <footer className="border-t border-[var(--line)] bg-[var(--cream)] px-6 py-4 text-center text-xs text-[var(--muted)]">
           <div className="mb-2 flex flex-wrap justify-center gap-4 font-semibold">
