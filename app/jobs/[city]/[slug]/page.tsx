@@ -3,10 +3,12 @@ import Link from "next/link";
 import { cache } from "react";
 import { notFound, permanentRedirect } from "next/navigation";
 import ApplyForm from "@/components/ApplyForm";
+import ReportButton from "@/components/ReportButton";
 import { getAllJobs, getJobBySlug, jobHref } from "@/lib/jobs-data";
 import { citySlug, parseCitySlug, parseCategorySlug } from "@/lib/geo";
 import { buildJobPostingSchema } from "@/lib/job-schema";
 import { timeAgo } from "@/lib/time";
+import { recordJobView } from "@/lib/track-view";
 
 type SlugPageProps = { params: Promise<{ city: string; slug: string }> };
 
@@ -93,6 +95,9 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
   const canonicalCity = citySlug(job.city, job.state);
   if (canonicalCity !== city) permanentRedirect(jobHref(job));
 
+  const isDemoJob = job.id.startsWith("demo-");
+  if (!isDemoJob) await recordJobView(job.id);
+
   const canonicalUrl = `https://findjobsnearby.com${jobHref(job)}`;
   const jobPosting = buildJobPostingSchema(job, canonicalUrl);
 
@@ -116,12 +121,13 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
               <p className="mt-4 max-w-[650px] text-base leading-8 text-[var(--muted)]">{job.description}</p>
               <p className="mt-5 max-w-[650px] text-base leading-8 text-[var(--muted)]">This is a local opportunity from a small business in {job.city}, {job.state}. Apply with a focused profile and hear directly from the employer.</p>
             </div>
+            {!isDemoJob && <div className="mt-8"><ReportButton targetType="job" targetId={job.id} /></div>}
           </article>
           <aside className="h-fit rounded-2xl bg-[var(--ink)] p-6 text-white">
             <p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--yellow)]">Ready to apply?</p>
             <h2 className="display mt-5 text-3xl font-bold">Keep it simple.</h2>
             <p className="mt-3 text-sm leading-6 text-white/70">Create a role-specific profile and apply for free.</p>
-            <ApplyForm jobId={job.id} jobTitle={job.title} />
+            <ApplyForm jobId={job.id} jobTitle={job.title} jobCategory={job.category} />
             <p className="mt-4 text-center text-xs text-white/50">No application fees</p>
           </aside>
         </div>

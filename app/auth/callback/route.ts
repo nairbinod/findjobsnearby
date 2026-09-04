@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { recordReferral, REFERRAL_COOKIE } from "@/lib/referral";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -28,6 +30,9 @@ export async function GET(request: Request) {
           errorUrl.searchParams.set("error", accountError.message);
           return NextResponse.redirect(errorUrl);
         }
+
+        const referralCode = (await cookies()).get(REFERRAL_COOKIE)?.value;
+        if (referralCode) await recordReferral(supabase, referralCode, data.user.id);
       }
     }
   }

@@ -3,6 +3,11 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { recordReferral, REFERRAL_COOKIE } from "@/lib/referral";
+
+function readCookie(name: string) {
+  return document.cookie.split("; ").find((row) => row.startsWith(`${name}=`))?.split("=")[1];
+}
 
 export default function AuthPage() {
   const [role, setRole] = useState<"candidate" | "employer">("candidate");
@@ -19,6 +24,8 @@ export default function AuthPage() {
       const { data: account } = await supabase.from("accounts").select("id").eq("id", data.user.id).maybeSingle();
       if (!account) {
         await supabase.from("accounts").insert({ id: data.user.id, role: data.user.user_metadata.role ?? "candidate" });
+        const referralCode = readCookie(REFERRAL_COOKIE);
+        if (referralCode) await recordReferral(supabase, decodeURIComponent(referralCode), data.user.id);
       }
       setMessage("You are signed in. Your account is ready.");
     });

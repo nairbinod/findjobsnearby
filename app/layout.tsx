@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 import { buildNumber, lastUpdated } from "@/lib/build-info";
+import ReferralCapture from "@/components/ReferralCapture";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     url: "https://findjobsnearby.com",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "FindJobsNearBy | Local work, without the runaround",
     description: "Free to post and apply for local jobs across Dallas-Fort Worth.",
   },
@@ -59,10 +60,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             },
           },
         ]).replace(/</g, "\\u003c") }} />
+        <ReferralCapture />
         {children}
         <footer className="border-t border-[var(--line)] bg-[var(--cream)] px-6 py-4 text-center text-xs text-[var(--muted)]">
           <div className="mb-2 flex flex-wrap justify-center gap-4 font-semibold">
-            <a href="/about">About</a><a href="/plans">Plans</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a>
+            <a href="/about">About</a><a href="/employers">For employers</a><a href="/plans">Plans</a><a href="/faq">FAQ</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a>
           </div>
           FindJobsNearBy · Build {buildNumber} · Last updated {lastUpdated}
         </footer>
