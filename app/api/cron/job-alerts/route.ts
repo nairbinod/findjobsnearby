@@ -38,6 +38,8 @@ export async function GET(request: Request) {
     description: "",
     responsibilities: [],
     status: "published" as const,
+    address: null,
+    urgent: false,
   }));
 
   let sent = 0;

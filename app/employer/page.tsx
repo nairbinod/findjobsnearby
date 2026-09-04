@@ -7,7 +7,7 @@ import { buildJobHref } from "@/lib/geo";
 import ReportButton from "@/components/ReportButton";
 import AuthNav from "@/components/AuthNav";
 
-type EmployerJob = { id: string; title: string; company_name: string; city: string; state: string; pay_range: string; status: string; created_at: string; expires_at: string | null };
+type EmployerJob = { id: string; title: string; company_name: string; city: string; state: string; pay_range: string; status: string; created_at: string; expires_at: string | null; urgent: boolean };
 type Applicant = { id: string; created_at: string; candidate_id: string; withdrawn_at: string | null; candidate_profiles: { id: string; role_title: string; category: string | null; availability: string | null; available_from: string | null; available_until: string | null; curated_content: string | null }[] };
 type UnlockedDetails = { workHistory: string | null; desiredPay: string | null; email: string | null; phone: string | null };
 
@@ -99,7 +99,7 @@ export default function EmployerPage() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) { setMessage("Sign in with your employer account to manage jobs."); return; }
       const [{ data, error }, { data: unlocks }, { data: account }] = await Promise.all([
-        supabase.from("jobs").select("id, title, company_name, city, state, pay_range, status, created_at, expires_at").eq("employer_id", userData.user.id).order("created_at", { ascending: false }),
+        supabase.from("jobs").select("id, title, company_name, city, state, pay_range, status, created_at, expires_at, urgent").eq("employer_id", userData.user.id).order("created_at", { ascending: false }),
         supabase.from("paid_profile_views").select("candidate_id").eq("employer_id", userData.user.id),
         supabase.from("accounts").select("free_views_used").eq("id", userData.user.id).maybeSingle(),
       ]);
@@ -157,6 +157,7 @@ export default function EmployerPage() {
                 <article key={job.id} className="rounded-2xl border border-[var(--line)] bg-white p-5">
                   <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
                     <div>
+                      {job.urgent && <span className="mb-1.5 inline-block rounded-full bg-[var(--coral)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}
                       <h3 className="text-xl font-bold">{job.title}</h3>
                       <p className="mt-1 text-sm text-[var(--muted)]">{job.company_name} · {job.city} · {job.pay_range}</p>
                       <div className="mt-3 flex flex-wrap items-center gap-3"><span className="text-xs font-semibold uppercase tracking-wider text-[var(--coral)]">{job.status}</span><span className="text-xs text-[var(--muted)]">{viewCounts[job.id] ?? 0} unique view{(viewCounts[job.id] ?? 0) === 1 ? "" : "s"}</span><span className="text-xs text-[var(--muted)]">· {applicationCounts[job.id] ?? 0} applicant{(applicationCounts[job.id] ?? 0) === 1 ? "" : "s"}</span></div>

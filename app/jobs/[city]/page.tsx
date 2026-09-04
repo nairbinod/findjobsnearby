@@ -75,6 +75,7 @@ export default async function CityJobsPage({ params }: CityPageProps) {
           {jobs.map((job) => (
             <Link href={jobHref(job)} key={job.id} className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-6 transition-all hover:-translate-y-1 hover:border-[var(--ink)] hover:shadow-lg sm:grid-cols-[1fr_auto] sm:items-center">
               <div>
+                {job.urgent && <span className="mb-2 inline-block rounded-full bg-[var(--coral)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}
                 <h3 className="text-xl font-bold">{job.title}</h3>
                 <p className="mt-2 text-sm font-semibold text-[var(--muted)]">{job.company} · {job.category}</p>
               </div>

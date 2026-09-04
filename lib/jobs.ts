@@ -13,6 +13,8 @@ export type Job = {
   description: string;
   responsibilities: string[];
   status: "published" | "closed";
+  address: string | null;
+  urgent: boolean;
 };
 
 function expiresIn30Days(postedAt: string) {
@@ -33,6 +35,8 @@ const demoJobsRaw = [
     postedAt: "2026-09-03T16:00:00.000Z",
     description: "Prepare ingredients, work the line during service, and keep the kitchen organized.",
     responsibilities: ["Prepare ingredients for service", "Work the line during rushes", "Keep the kitchen organized and stocked"],
+    address: "412 Magnolia Ave, Fort Worth, TX 76104",
+    urgent: true,
   },
   {
     id: "demo-north-star-electrician",
@@ -47,6 +51,8 @@ const demoJobsRaw = [
     postedAt: "2026-09-03T13:00:00.000Z",
     description: "Install, maintain, and repair electrical systems in residential properties.",
     responsibilities: ["Install residential electrical systems", "Diagnose and repair electrical issues", "Follow safety and code requirements"],
+    address: null,
+    urgent: false,
   },
   {
     id: "demo-patel-caregiver",
@@ -61,6 +67,8 @@ const demoJobsRaw = [
     postedAt: "2026-09-02T15:00:00.000Z",
     description: "Pick up two children, help with homework, and prepare a simple afternoon snack.",
     responsibilities: ["Pick up two children from school", "Help with homework", "Prepare a simple afternoon snack"],
+    address: null,
+    urgent: false,
   },
   {
     id: "demo-lone-star-warehouse",
@@ -75,6 +83,8 @@ const demoJobsRaw = [
     postedAt: "2026-09-02T12:00:00.000Z",
     description: "Receive deliveries, pick orders, and keep inventory accurate in a busy warehouse.",
     responsibilities: ["Receive and log incoming deliveries", "Pick and pack orders accurately", "Keep inventory counts up to date"],
+    address: null,
+    urgent: false,
   },
 ];
 

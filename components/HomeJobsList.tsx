@@ -24,6 +24,7 @@ export default function HomeJobsList({ jobs, categories, jobHrefs }: { jobs: Job
               {index % 4 === 0 ? "✦" : index % 4 === 1 ? "⌁" : index % 4 === 2 ? "♡" : "▦"}
             </div>
             <div>
+              {job.urgent && <span className="mb-1.5 inline-block rounded-full bg-[var(--coral)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}
               <h3 className="font-bold">{job.title}</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">{job.company} · {job.city}, {job.state}</p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold"><span className="rounded bg-[var(--cream)] px-2 py-1">{job.type}</span><span className="rounded bg-[var(--cream)] px-2 py-1">{job.pay}</span></div>

@@ -25,6 +25,8 @@ type DbJobRow = {
   created_at: string;
   expires_at: string | null;
   status: "published" | "closed";
+  address: string | null;
+  urgent: boolean;
 };
 
 function fromDbRow(row: DbJobRow): Job {
@@ -43,6 +45,8 @@ function fromDbRow(row: DbJobRow): Job {
     description: row.description ?? "A local opportunity from a nearby business.",
     responsibilities: row.responsibilities ?? [],
     status: row.status,
+    address: row.address,
+    urgent: row.urgent,
   };
 }
 
@@ -53,7 +57,7 @@ export async function getAllJobs(): Promise<Job[]> {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("jobs")
-    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at, status")
+    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at, status, address, urgent")
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
@@ -71,7 +75,7 @@ export async function getJobBySlug(slug: string): Promise<Job | undefined> {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("jobs")
-    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at, status")
+    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at, status, address, urgent")
     .eq("id", idMatch[0])
     .in("status", ["published", "closed"])
     .maybeSingle();

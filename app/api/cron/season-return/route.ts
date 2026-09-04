@@ -57,6 +57,8 @@ export async function GET(request: Request) {
       description: "",
       responsibilities: [],
       status: "published" as const,
+      address: null,
+      urgent: false,
     };
     jobsByCategory.set(row.category, [...(jobsByCategory.get(row.category) ?? []), job]);
   }

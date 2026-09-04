@@ -50,7 +50,7 @@ export function renderShareCard(job: Job) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 30, fontWeight: 700, color: INK }}>
             findjobs<span style={{ color: CORAL }}>nearby</span>
           </div>
-          <div style={{ display: "flex", background: MINT, color: INK, fontSize: 20, fontWeight: 700, padding: "10px 20px", borderRadius: 999, letterSpacing: 1 }}>HIRING NOW</div>
+          <div style={{ display: "flex", background: job.urgent ? CORAL : MINT, color: job.urgent ? "#ffffff" : INK, fontSize: 20, fontWeight: 700, padding: "10px 20px", borderRadius: 999, letterSpacing: 1 }}>{job.urgent ? "URGENTLY HIRING" : "HIRING NOW"}</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", marginTop: HEADER_GAP }}>

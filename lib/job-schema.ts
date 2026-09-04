@@ -34,7 +34,13 @@ export function buildJobPostingSchema(job: Job, canonicalUrl: string) {
     hiringOrganization: { "@type": "Organization", name: job.company },
     jobLocation: {
       "@type": "Place",
-      address: { "@type": "PostalAddress", addressLocality: job.city, addressRegion: job.state, addressCountry: "US" },
+      address: {
+        "@type": "PostalAddress",
+        ...(job.address ? { streetAddress: job.address } : {}),
+        addressLocality: job.city,
+        addressRegion: job.state,
+        addressCountry: "US",
+      },
     },
     ...(baseSalary ? { baseSalary } : {}),
     directApply: true,

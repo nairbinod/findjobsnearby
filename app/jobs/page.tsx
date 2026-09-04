@@ -94,7 +94,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
             {visibleJobs.map((job) => (
               <Link href={jobHref(job)} key={job.id} className="grid gap-5 rounded-2xl border border-[var(--line)] bg-white p-6 transition-all hover:-translate-y-1 hover:border-[var(--ink)] hover:shadow-lg sm:grid-cols-[1fr_auto] sm:items-center">
                 <div>
-                  <div className="flex flex-wrap items-center gap-3"><h3 className="text-xl font-bold">{job.title}</h3><span className="rounded-full bg-[var(--mint)] px-3 py-1 text-[11px] font-bold uppercase">Open</span></div>
+                  <div className="flex flex-wrap items-center gap-3"><h3 className="text-xl font-bold">{job.title}</h3><span className="rounded-full bg-[var(--mint)] px-3 py-1 text-[11px] font-bold uppercase">Open</span>{job.urgent && <span className="rounded-full bg-[var(--coral)] px-3 py-1 text-[11px] font-bold uppercase text-white">Urgently hiring</span>}</div>
                   <p className="mt-2 text-sm font-semibold text-[var(--muted)]">{job.company} · {job.city}, {job.state}</p>
                   <p className="mt-4 max-w-[650px] text-sm leading-6 text-[var(--muted)]">{job.description}</p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold"><span className="rounded bg-[var(--cream)] px-2 py-1">{job.type}</span><span className="rounded bg-[var(--cream)] px-2 py-1">{job.pay}</span><span className="rounded bg-[var(--cream)] px-2 py-1">{job.category}</span></div>

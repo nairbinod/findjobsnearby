@@ -78,6 +78,7 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
             {jobs.map((job) => (
               <Link href={jobHref(job)} key={job.id} className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-6 transition-all hover:-translate-y-1 hover:border-[var(--ink)] hover:shadow-lg sm:grid-cols-[1fr_auto] sm:items-center">
                 <div>
+                  {job.urgent && <span className="mb-2 inline-block rounded-full bg-[var(--coral)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}
                   <h3 className="text-xl font-bold">{job.title}</h3>
                   <p className="mt-2 text-sm font-semibold text-[var(--muted)]">{job.company} · {job.city}, {job.state} · Posted {timeAgo(job.postedAt)}</p>
                 </div>
@@ -112,9 +113,12 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
         <p className="text-sm font-semibold text-[var(--muted)]"><Link href="/jobs" className="hover:text-[var(--ink)]">All jobs</Link> / <Link href={`/jobs/${city}`} className="hover:text-[var(--ink)]">{job.city}, {job.state}</Link></p>
         <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_300px]">
           <article>
-            <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase ${job.status === "closed" ? "bg-[var(--line)] text-[var(--muted)]" : "bg-[var(--mint)]"}`}>{job.status === "closed" ? "No longer accepting applications" : "Open role"}</span>
+            <div className="flex flex-wrap gap-2">
+              <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase ${job.status === "closed" ? "bg-[var(--line)] text-[var(--muted)]" : "bg-[var(--mint)]"}`}>{job.status === "closed" ? "No longer accepting applications" : "Open role"}</span>
+              {job.urgent && <span className="rounded-full bg-[var(--coral)] px-3 py-1 text-[11px] font-bold uppercase text-white">Urgently hiring</span>}
+            </div>
             <h1 className="display mt-6 text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">{job.title}</h1>
-            <p className="mt-5 text-lg font-semibold text-[var(--muted)]">{job.company} · {job.city}, {job.state} · Posted {timeAgo(job.postedAt)}</p>
+            <p className="mt-5 text-lg font-semibold text-[var(--muted)]">{job.company} · {job.address ? `${job.address}, ` : ""}{job.city}, {job.state} · Posted {timeAgo(job.postedAt)}</p>
             <div className="mt-10 flex flex-wrap gap-2 text-sm font-semibold"><span className="rounded bg-white px-3 py-2">{job.pay}</span><span className="rounded bg-white px-3 py-2">{job.type}</span><span className="rounded bg-white px-3 py-2">{job.category}</span></div>
             <div className="mt-12 border-t border-[var(--line)] pt-8">
               <h2 className="display text-3xl font-bold">The role</h2>

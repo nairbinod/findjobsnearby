@@ -20,6 +20,8 @@ type ExistingJob = {
   title: string;
   company_name: string;
   city: string;
+  address: string | null;
+  urgent: boolean;
   pay_range: string;
   employment_type: string;
   category: string | null;
@@ -32,6 +34,8 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
   const [companyName, setCompanyName] = useState(job.company_name);
   const [pay, setPay] = useState(job.pay_range);
   const [location, setLocation] = useState(job.city);
+  const [address, setAddress] = useState(job.address ?? "");
+  const [urgent, setUrgent] = useState(job.urgent);
   const [type, setType] = useState(job.employment_type);
   const [category, setCategory] = useState<string>(job.category ?? jobCategories[0]);
   const [responsibilities, setResponsibilities] = useState(job.responsibilities.join("\n"));
@@ -85,6 +89,8 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
       title,
       company_name: companyName,
       city: location,
+      address: address.trim() || null,
+      urgent,
       pay_range: pay,
       employment_type: type,
       category,
@@ -143,6 +149,8 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
               <label className="block text-sm font-bold">Job title<input required value={title} onChange={(event) => setTitle(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
               <div className="grid gap-5 sm:grid-cols-2"><label className="block text-sm font-bold">Pay range <span className="text-[var(--coral)]">*</span><input required value={pay} onChange={(event) => setPay(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label><label className="block text-sm font-bold">Employment type<select value={type} onChange={(event) => setType(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 font-normal outline-none">{employmentTypes.map(([label, value]) => <option key={value} value={value}>{label}</option>)}</select></label></div>
               <div className="grid gap-5 sm:grid-cols-2"><label className="block text-sm font-bold">City<input required value={location} onChange={(event) => setLocation(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label><label className="block text-sm font-bold">Category<select value={category} onChange={(event) => setCategory(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 font-normal outline-none">{jobCategories.map((item) => <option key={item} value={item}>{item}</option>)}</select></label></div>
+              <label className="block text-sm font-bold">Street address <span className="font-normal text-[var(--muted)]">(optional)</span><input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="e.g. 412 Magnolia Ave" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
+              <label className="flex items-center gap-3 text-sm font-bold"><input type="checkbox" checked={urgent} onChange={(event) => setUrgent(event.target.checked)} className="h-5 w-5 rounded border-[var(--line)] accent-[var(--coral)]" />Mark as Urgently Hiring<span className="font-normal text-[var(--muted)]">— adds a badge to your listing</span></label>
               <label className="block text-sm font-bold">What will they do?<span className="mt-1 block text-xs font-normal text-[var(--muted)]">3-5 responsibilities, one per line. {responsibilities.split("\n").map((item) => item.trim()).filter(Boolean).length}/5</span><textarea required value={responsibilities} onChange={(event) => setResponsibilities(event.target.value)} rows={5} className="mt-2 w-full resize-none rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
             </div>
             <button type="submit" disabled={drafting} className="mt-8 w-full rounded-full bg-[var(--coral)] px-6 py-4 font-bold text-white shadow-[0_6px_0_#ce5a4b] disabled:opacity-60">{drafting ? "Drafting update..." : "Draft update"} <span aria-hidden="true">→</span></button>
@@ -152,8 +160,9 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
             <p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--coral)]">{draft ? "Review before saving" : "Preview"}</p>
             {draft ? (
               <div className="mt-8">
+                {urgent && <span className="mb-3 inline-block rounded-full bg-[var(--coral)] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}
                 <h2 className="display text-3xl font-bold">{title}</h2>
-                <p className="mt-2 font-semibold">{companyName} · {location} · {type.replace("_", "-")}</p>
+                <p className="mt-2 font-semibold">{companyName} · {address ? `${address}, ${location}` : location} · {type.replace("_", "-")}</p>
                 <p className="mt-1 font-bold text-[var(--coral)]">{pay}</p>
                 {flags.length > 0 && <div className="mt-6 rounded-xl border border-[var(--coral)] bg-white/70 p-4"><p className="text-xs font-bold uppercase tracking-wider text-[var(--coral)]">Review before saving</p><p className="mt-2 text-sm leading-6">Wording that may be exclusionary or legally risky: {flags.map((flag) => `"${flag}"`).join(", ")}.</p></div>}
                 <div className="mt-8 border-t border-[var(--ink)]/15 pt-5"><p className="text-sm leading-7">{aiDescription}</p></div>

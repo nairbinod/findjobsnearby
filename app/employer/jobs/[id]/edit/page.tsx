@@ -15,7 +15,7 @@ export default async function EditJobPage({ params }: EditJobPageProps) {
   // check keeps the ownership rule visible at the call site.
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, title, company_name, city, pay_range, employment_type, category, responsibilities, status")
+    .select("id, title, company_name, city, address, urgent, pay_range, employment_type, category, responsibilities, status")
     .eq("id", id)
     .eq("employer_id", userData.user.id)
     .maybeSingle();
