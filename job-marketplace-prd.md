@@ -1,3 +1,4 @@
+
 # Product Requirements Document
 ## FindJobsNearBy — Phase 1
 ### Texas Small-Business Job Marketplace
@@ -162,7 +163,7 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
   - *AC:* `FAQPage` structured data (schema.org) for search-snippet eligibility.
 - **US-48:** As the platform operator, I want any AI-assisted blog/guide/FAQ content to follow the same guardrails as listings and profiles (§5), so nothing published makes unverified or invented claims.
 - **US-49:** As a visitor reading the blog or resources, I want to subscribe to a newsletter, so I get updates without having to check back manually.
-  - *AC:* Sent via Sender.net (§9).
+  - *AC:* Sent via Resend (§9).
 
 ### 4.19 My Applications (candidate)
 
@@ -226,7 +227,7 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
 | Hosting | Vercel |
 | Payments | Stripe — one-off charges, credit packs, boosts, and Phase 2 subscription billing |
 | AI generation | Claude API, called server-side only |
-| App-triggered email (transactional + newsletter) | Sender.net — handles both notification emails (§4.9) and blog/newsletter sends (§4.18) via one API |
+| App-triggered email (transactional + newsletter) | Resend — handles both notification emails (§4.9) and blog/newsletter sends (§4.18) via one API |
 | Company email (human-read inboxes) | Zoho Mail (mail.zoho.com) — support@, hello@, etc.; not used for app-triggered sending |
 | Analytics | PostHog — free tier (1M events/mo) covers funnel tracking for the Goals table metrics in §2 (paid-contact conversion, retention, subscription attach rate) and powers the unique-view-count feature (US-21a) |
 | Monitoring | Sentry |

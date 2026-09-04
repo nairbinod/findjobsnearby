@@ -10,6 +10,14 @@ type ExistingProfile = { id: string; role_title: string; category: string | null
 
 const jobCategories = ["Food & hospitality", "Skilled trades", "Care & education", "Operations"] as const;
 
+function notifyNewApplication(applicationId: string) {
+  void fetch("/api/notify/new-application", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ applicationId }),
+  });
+}
+
 export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormProps) {
   const [open, setOpen] = useState(false);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
@@ -95,13 +103,16 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
         setBusy(false);
         return;
       }
-      const { error: applicationError } = await supabase.from("applications").insert({
+      const { data: newApplication, error: applicationError } = await supabase.from("applications").insert({
         job_id: jobId,
         candidate_id: userData.user.id,
         profile_id: selectedProfileId,
-      });
+      }).select("id").single();
       setMessage(applicationError ? applicationError.message : "Application sent. The employer can now review your profile.");
-      if (!applicationError) setOpen(false);
+      if (!applicationError && newApplication) {
+        notifyNewApplication(newApplication.id);
+        setOpen(false);
+      }
       setBusy(false);
       return;
     }
@@ -159,14 +170,17 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
       return;
     }
 
-    const { error: applicationError } = await supabase.from("applications").insert({
+    const { data: newApplication, error: applicationError } = await supabase.from("applications").insert({
       job_id: jobId,
       candidate_id: userData.user.id,
       profile_id: profile.id,
-    });
+    }).select("id").single();
 
     setMessage(applicationError ? applicationError.message : "Application sent. The employer can now review your profile.");
-    if (!applicationError) setOpen(false);
+    if (!applicationError && newApplication) {
+      notifyNewApplication(newApplication.id);
+      setOpen(false);
+    }
     setBusy(false);
   }
 
