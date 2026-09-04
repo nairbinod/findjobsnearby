@@ -19,6 +19,7 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
   const [roleTitle, setRoleTitle] = useState(jobTitle);
   const [category, setCategory] = useState<string>(jobCategory ?? jobCategories[0]);
   const [availability, setAvailability] = useState("");
+  const [desiredPay, setDesiredPay] = useState("");
   const [workHistory, setWorkHistory] = useState("");
   const [approved, setApproved] = useState(false);
   const [message, setMessage] = useState("");
@@ -60,7 +61,7 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
       const response = await fetch("/api/draft-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roleTitle, category, availability, workHistory }),
+        body: JSON.stringify({ roleTitle, category, availability, workHistory, desiredPay }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "Could not draft your profile.");
@@ -145,6 +146,7 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
       profile_id: profile.id,
       candidate_id: userData.user.id,
       work_history: workHistory,
+      desired_pay: desiredPay || null,
     });
 
     if (privateProfileError) {
@@ -191,6 +193,7 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
           <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Role title<input required value={roleTitle} onChange={(event) => setRoleTitle(event.target.value)} className="mt-2 min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]/30" /></label>
           <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Category<select value={category} onChange={(event) => setCategory(event.target.value)} className="mt-2 min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal normal-case tracking-normal text-[var(--ink)] outline-none focus:border-[var(--yellow)]">{jobCategories.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
           <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Availability<input required value={availability} onChange={(event) => setAvailability(event.target.value)} placeholder="e.g. Weekday mornings" className="mt-2 min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]/30" /></label>
+          <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Desired pay <span className="normal-case font-normal text-white/40">(optional)</span><input value={desiredPay} onChange={(event) => setDesiredPay(event.target.value)} placeholder="e.g. $18-20/hr" className="mt-2 min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]/30" /></label>
           <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Work history<textarea required value={workHistory} onChange={(event) => setWorkHistory(event.target.value)} rows={4} placeholder="A few notes about your experience" className="mt-2 w-full resize-none rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]/30" /></label>
         </>
       )}

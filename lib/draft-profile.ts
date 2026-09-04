@@ -19,6 +19,7 @@ export type ProfileDraftInput = {
   category: string;
   availability: string;
   workHistory: string;
+  desiredPay?: string;
 };
 
 export type ProfileDraft = z.infer<typeof ProfileDraftSchema>;
