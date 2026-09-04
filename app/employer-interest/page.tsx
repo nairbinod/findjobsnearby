@@ -1,0 +1,22 @@
+"use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
+
+import { FormEvent, useState } from "react";
+
+export default function EmployerInterestPage() {
+  const [sent, setSent] = useState(false);
+  const [business, setBusiness] = useState("");
+  const [contact, setContact] = useState("");
+  const [role, setRole] = useState("");
+  const [timing, setTiming] = useState("This month");
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const subject = encodeURIComponent(`Hiring help for ${business}`);
+    const body = encodeURIComponent(`Business: ${business}\nBest contact: ${contact}\nRole or roles: ${role}\nHiring timing: ${timing}`);
+    window.location.href = `mailto:hello@findjobsnearby.com?subject=${subject}&body=${body}`;
+    setSent(true);
+  }
+
+  return <div className="min-h-screen bg-[var(--cream)]"><header className="mx-auto flex max-w-[1000px] items-center justify-between px-6 py-6 lg:px-10"><a href="/" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></a><a href="/jobs" className="text-sm font-bold text-[var(--muted)]">Browse jobs <span aria-hidden="true">→</span></a></header><main className="mx-auto max-w-[1000px] px-6 pb-20 pt-12 lg:px-10"><div className="max-w-[680px]"><p className="mb-5 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Founder-assisted hiring</p><h1 className="display text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">Tell us what<br /><em className="font-normal text-[var(--coral)]">you&apos;re hiring for.</em></h1><p className="mt-7 text-lg leading-8 text-[var(--muted)]">No account or setup required. Share a few details and I&apos;ll help you get your local listing started.</p></div><div className="mt-12 grid gap-8 lg:grid-cols-[1fr_.8fr]"><form onSubmit={submit} className="rounded-2xl bg-white p-7 shadow-sm sm:p-9"><label className="block text-sm font-bold">Business name<input required value={business} onChange={(event) => setBusiness(event.target.value)} placeholder="Your business" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label><label className="mt-5 block text-sm font-bold">Best email or phone<input required value={contact} onChange={(event) => setContact(event.target.value)} placeholder="How should I reach you?" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label><label className="mt-5 block text-sm font-bold">What role are you hiring for?<textarea required value={role} onChange={(event) => setRole(event.target.value)} rows={4} placeholder="Tell me the role, location, pay, and anything important." className="mt-2 w-full resize-none rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label><label className="mt-5 block text-sm font-bold">When are you hiring?<select value={timing} onChange={(event) => setTiming(event.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 font-normal outline-none"><option>This month</option><option>Next month</option><option>Seasonally</option><option>Just exploring</option></select></label><button type="submit" className="mt-8 w-full rounded-full bg-[var(--coral)] px-6 py-4 font-bold text-white">Start the conversation <span aria-hidden="true">→</span></button>{sent && <p role="status" className="mt-4 rounded-xl bg-[var(--mint)] p-4 text-sm leading-6">Your email app should open with the details. I&apos;ll follow up and help shape the listing.</p>}</form><aside className="rounded-2xl bg-[var(--mint)] p-7 sm:p-9"><p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--coral)]">What happens next</p><div className="mt-8 space-y-7"><div><span className="display text-3xl font-bold">01</span><p className="mt-2 font-bold">We talk through the role</p></div><div><span className="display text-3xl font-bold">02</span><p className="mt-2 font-bold">I help prepare the listing</p></div><div><span className="display text-3xl font-bold">03</span><p className="mt-2 font-bold">You approve it before it goes live</p></div></div><p className="mt-10 border-t border-[var(--ink)]/15 pt-5 text-sm leading-6 text-[var(--muted)]">Posting is free. There is no obligation and no long signup flow.</p></aside></div></main></div>;
+}
