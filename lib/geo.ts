@@ -2,7 +2,7 @@
 // Launch metro is Dallas-Fort Worth; other metros get thin programmatic
 // pages now so the URL structure and indexation are in place before
 // go-to-market expands city by city.
-export const TX_METROS = [
+export const DFW_METRO_CITIES = [
   "Dallas",
   "Fort Worth",
   "Arlington",
@@ -13,6 +13,9 @@ export const TX_METROS = [
   "Frisco",
   "Denton",
   "Grand Prairie",
+] as const;
+
+const OTHER_TX_METROS = [
   "Houston",
   "Austin",
   "San Antonio",
@@ -21,6 +24,8 @@ export const TX_METROS = [
   "Lubbock",
   "Waco",
 ] as const;
+
+export const TX_METROS = [...DFW_METRO_CITIES, ...OTHER_TX_METROS] as const;
 
 function kebab(value: string) {
   return value

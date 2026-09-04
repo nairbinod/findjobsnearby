@@ -2,8 +2,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { categories } from "@/lib/jobs";
 import { getAllJobs, jobHref } from "@/lib/jobs-data";
-import { TX_METROS } from "@/lib/geo";
+import { TX_METROS, DFW_METRO_CITIES } from "@/lib/geo";
 import { timeAgo } from "@/lib/time";
+import { extractHourlyRate } from "@/lib/pay";
+
+const PAY_OPTIONS = [
+  { value: "", label: "Any pay" },
+  { value: "15", label: "$15+/hr" },
+  { value: "20", label: "$20+/hr" },
+  { value: "25", label: "$25+/hr" },
+  { value: "30", label: "$30+/hr" },
+] as const;
+
+function jobMatchesLocation(job: { city: string }, location: string) {
+  if (location === "Dallas-Fort Worth") return (DFW_METRO_CITIES as readonly string[]).includes(job.city);
+  const city = location.split(",")[0]?.trim();
+  return job.city === city;
+}
 
 export const metadata: Metadata = {
   title: "Browse Local Jobs in Dallas-Fort Worth | FindJobsNearBy",
@@ -11,20 +26,28 @@ export const metadata: Metadata = {
   alternates: { canonical: "/jobs" },
 };
 
-type JobsPageProps = { searchParams: Promise<{ category?: string; q?: string; location?: string }> };
+type JobsPageProps = { searchParams: Promise<{ category?: string; q?: string; location?: string; pay?: string }> };
 
 export default async function JobsPage({ searchParams }: JobsPageProps) {
   const params = await searchParams;
   const category = params.category && categories.includes(params.category) ? params.category : "All jobs";
   const query = params.q ?? "";
   const location = params.location && params.location.length > 0 ? params.location : "Dallas-Fort Worth";
+  const minPay = params.pay ? Number(params.pay) : null;
 
   const allJobs = await getAllJobs();
   const visibleJobs = allJobs.filter((job) => {
     const matchesCategory = category === "All jobs" || job.category === category;
+    const matchesLocation = jobMatchesLocation(job, location);
+    const matchesPay = !minPay || (() => {
+      const rate = extractHourlyRate(job.pay);
+      return rate === null || rate >= minPay;
+    })();
     const searchText = `${job.title} ${job.company} ${job.city} ${job.state}`.toLowerCase();
-    return matchesCategory && searchText.includes(query.toLowerCase());
+    return matchesCategory && matchesLocation && matchesPay && searchText.includes(query.toLowerCase());
   });
+
+  const activeExtras = { ...(query ? { q: query } : {}), ...(location !== "Dallas-Fort Worth" ? { location } : {}), ...(minPay ? { pay: String(minPay) } : {}) };
 
   const itemList = {
     "@context": "https://schema.org",
@@ -46,10 +69,11 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       </header>
       <main className="mx-auto max-w-[1240px] px-6 pb-20 lg:px-10">
         <div className="border-b border-[var(--line)] pb-12 pt-12"><p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">The local job board</p><h1 className="display max-w-[700px] text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">Find your next<br /><em className="font-normal text-[var(--coral)]">nearby.</em></h1><p className="mt-6 max-w-[520px] text-lg leading-7 text-[var(--muted)]">Fresh opportunities from small businesses across Dallas-Fort Worth.</p></div>
-        <form action="/jobs" method="get" className="mt-10 grid gap-3 rounded-2xl bg-white p-4 shadow-sm sm:grid-cols-[1.3fr_1fr_auto] sm:p-3">
+        <form action="/jobs" method="get" className="mt-10 grid gap-3 rounded-2xl bg-white p-4 shadow-sm sm:grid-cols-[1.1fr_.9fr_.7fr_auto] sm:p-3">
           <input type="hidden" name="category" value={category} />
           <label className="flex flex-col gap-1 rounded-xl border border-[var(--line)] px-4 py-3 text-xs font-bold uppercase tracking-wider text-[var(--muted)]">What are you looking for?<input name="q" defaultValue={query} placeholder="Job title or keyword" className="mt-1 bg-transparent text-base font-semibold normal-case tracking-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)]/60" /></label>
           <label className="flex flex-col gap-1 rounded-xl border border-[var(--line)] px-4 py-3 text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Where?<select name="location" defaultValue={location} className="mt-1 bg-transparent text-base font-semibold normal-case tracking-normal text-[var(--ink)] outline-none"><option>Dallas-Fort Worth</option>{TX_METROS.map((city) => <option key={city}>{city}, TX</option>)}</select></label>
+          <label className="flex flex-col gap-1 rounded-xl border border-[var(--line)] px-4 py-3 text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Pay<select name="pay" defaultValue={minPay ? String(minPay) : ""} className="mt-1 bg-transparent text-base font-semibold normal-case tracking-normal text-[var(--ink)] outline-none">{PAY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
           <button type="submit" className="rounded-xl bg-[var(--coral)] px-7 py-4 font-bold text-white sm:self-stretch">Search <span aria-hidden="true">→</span></button>
         </form>
         <section className="mt-12">
@@ -58,7 +82,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
             {categories.map((item) => (
               <Link
                 key={item}
-                href={{ pathname: "/jobs", query: { ...(item !== "All jobs" ? { category: item } : {}), ...(query ? { q: query } : {}) } }}
+                href={{ pathname: "/jobs", query: { ...(item !== "All jobs" ? { category: item } : {}), ...activeExtras } }}
                 className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${category === item ? "border-[var(--ink)] bg-[var(--ink)] text-white" : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--ink)]"}`}
               >
                 {item}
