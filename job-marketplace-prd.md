@@ -55,6 +55,10 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
   - *AC:* Same guardrails as original posting apply (§5) — pay range still required, 3–5 responsibilities, no contact info. Edits take effect immediately; no separate admin review, matching the original posting flow's own-approval model.
 - **US-55:** As an employer, I want to close a listing before it expires, so candidates stop applying to a role I've already filled.
   - *AC:* A closed listing is removed from search, browse, and category pages immediately. Its URL stays reachable (no broken links from shares or search results) but shows a clear "no longer accepting applications" state instead of the apply form. Existing applications and any paid profile unlocks remain visible to the employer as a historical record.
+- **US-57:** As an employer, I want to add a street address to my listing, so candidates know exactly where to show up, not just the city.
+  - *AC:* Address is optional — an employer who doesn't want to publish an exact location can leave it blank and the listing still shows city/state as before. When provided, it appears on the job detail page and feeds the `streetAddress` field of the listing's JobPosting structured data.
+- **US-58:** As an employer, I want to mark a listing as "Urgently Hiring," so candidates notice it needs to be filled fast.
+  - *AC:* The flag is a simple toggle available at posting and at any later edit. When set, an "Urgently Hiring" badge appears everywhere the listing is shown to candidates — job detail page, browse/search results, city and category pages, the homepage feed, and the downloadable share image.
 
 ### 4.2 Multi-role job postings
 
