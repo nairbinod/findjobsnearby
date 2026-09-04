@@ -140,7 +140,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
         <div className="mb-12 max-w-[650px]">
           <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Edit listing</p>
           <h1 className="display text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-6xl">Update your posting.</h1>
-          {job.status === "closed" && <p className="mt-4 rounded-xl bg-[var(--line)] px-4 py-3 text-sm font-semibold text-[var(--ink)]">This listing is closed — changes save, but it stays hidden from candidates.</p>}
+          {job.status !== "published" && <p className="mt-4 rounded-xl bg-[var(--line)] px-4 py-3 text-sm font-semibold text-[var(--ink)]">This listing is {job.status} — changes save, but it stays hidden from candidates.</p>}
         </div>
         <div className="grid gap-8 lg:grid-cols-[1fr_.85fr]">
           <form onSubmit={createDraft} className="rounded-2xl bg-white p-6 shadow-sm sm:p-8">

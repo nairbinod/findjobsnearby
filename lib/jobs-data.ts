@@ -28,7 +28,7 @@ type DbJobRow = {
   responsibilities: string[] | null;
   created_at: string;
   expires_at: string | null;
-  status: "published" | "closed";
+  status: "published" | "closed" | "expired";
   address: string | null;
   urgent: boolean;
 };
@@ -85,7 +85,7 @@ export async function getJobBySlug(slug: string): Promise<Job | undefined> {
       .from("jobs")
       .select(JOB_COLUMNS)
       .eq("id", fullMatch[0])
-      .in("status", ["published", "closed"])
+      .in("status", ["published", "closed", "expired"])
       .maybeSingle();
     return data ? fromDbRow(data as DbJobRow) : undefined;
   }
@@ -98,7 +98,7 @@ export async function getJobBySlug(slug: string): Promise<Job | undefined> {
     .select(JOB_COLUMNS)
     .gte("id", `${prefix}-0000-0000-0000-000000000000`)
     .lte("id", `${prefix}-ffff-ffff-ffff-ffffffffffff`)
-    .in("status", ["published", "closed"])
+    .in("status", ["published", "closed", "expired"])
     .limit(1);
 
   return data && data.length > 0 ? fromDbRow(data[0] as DbJobRow) : undefined;

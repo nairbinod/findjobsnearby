@@ -117,7 +117,7 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
         <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_300px]">
           <article>
             <div className="flex flex-wrap gap-2">
-              <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase ${job.status === "closed" ? "bg-[var(--line)] text-[var(--muted)]" : "bg-[var(--mint)]"}`}>{job.status === "closed" ? "No longer accepting applications" : "Open role"}</span>
+              <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase ${job.status !== "published" ? "bg-[var(--line)] text-[var(--muted)]" : "bg-[var(--mint)]"}`}>{job.status !== "published" ? "No longer accepting applications" : "Open role"}</span>
               {job.urgent && <span className="rounded-full bg-[var(--coral)] px-3 py-1 text-[11px] font-bold uppercase text-white">Urgently hiring</span>}
             </div>
             <h1 className="display mt-6 text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">{job.title}</h1>
@@ -134,11 +134,11 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
             </div>
           </article>
           <aside className="h-fit rounded-2xl bg-[var(--ink)] p-6 text-white">
-            {job.status === "closed" ? (
+            {job.status !== "published" ? (
               <>
-                <p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--yellow)]">This role is filled</p>
+                <p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--yellow)]">{job.status === "closed" ? "This role is filled" : "This listing has expired"}</p>
                 <h2 className="display mt-5 text-3xl font-bold">Not accepting applications.</h2>
-                <p className="mt-3 text-sm leading-6 text-white/70">This employer has closed this listing. Check out other open roles nearby.</p>
+                <p className="mt-3 text-sm leading-6 text-white/70">{job.status === "closed" ? "This employer has closed this listing." : "This listing is no longer active."} Check out other open roles nearby.</p>
                 <Link href="/jobs" className="mt-7 block w-full rounded-full bg-[var(--yellow)] px-5 py-4 text-center font-bold text-[var(--ink)]">Browse open jobs <span aria-hidden="true">→</span></Link>
               </>
             ) : (

@@ -122,6 +122,39 @@ export async function notifySeasonReturn(candidateId: string, jobs: Job[]) {
   for (const job of unseen) await logNotification(admin, "season_return", candidateId, job.id);
 }
 
+/** US-31: warn an employer before their listing(s) auto-expire, so they can
+ * renew instead of the listing silently disappearing from search. */
+export async function notifyListingRenewal(employerId: string, jobs: Job[]) {
+  const admin = createSupabaseAdminClient();
+  const unseen: Job[] = [];
+  for (const job of jobs) {
+    if (!(await alreadyNotified(admin, "listing_renewal_reminder", employerId, job.id))) unseen.push(job);
+  }
+  if (unseen.length === 0) return;
+
+  const { data: employerUser } = await admin.auth.admin.getUserById(employerId);
+  const employerEmail = employerUser.user?.email;
+  if (!employerEmail) return;
+
+  const listItems = unseen.map((job) => `<li style="margin-bottom:8px;">${job.title} — ${job.city}, ${job.state}</li>`).join("");
+  const plural = unseen.length > 1;
+
+  await getResendClient().emails.send({
+    from: NOTIFICATIONS_FROM,
+    to: employerEmail,
+    subject: plural ? `${unseen.length} listings are expiring soon` : "Your listing is expiring soon",
+    html: wrap(
+      "Renew before your listing goes stale",
+      `<h1 style="font-size:22px;color:#152d2a;margin:0 0 12px;">Time to renew${plural ? " a few listings" : ""}.</h1>
+       <p style="font-size:15px;line-height:1.6;color:#152d2a;">${plural ? "These listings will" : "This listing will"} stop showing to candidates in the next few days unless you renew:</p>
+       <ul style="padding-left:18px;font-size:15px;">${listItems}</ul>
+       <a href="${SITE_URL}/employer" style="display:inline-block;margin-top:16px;background:#152d2a;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:700;font-size:14px;">Renew in your dashboard →</a>`,
+    ),
+  });
+
+  for (const job of unseen) await logNotification(admin, "listing_renewal_reminder", employerId, job.id);
+}
+
 /** US-52: digest email for the account-free homepage job-alert signup.
  * Uses job_alert_sent_log for dedup rather than notification_log, since a
  * subscriber has no accounts row to key off of. */

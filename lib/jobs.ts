@@ -12,7 +12,7 @@ export type Job = {
   expiresAt: string | null;
   description: string;
   responsibilities: string[];
-  status: "published" | "closed";
+  status: "published" | "closed" | "expired";
   address: string | null;
   urgent: boolean;
 };

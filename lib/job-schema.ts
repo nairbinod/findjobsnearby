@@ -18,9 +18,9 @@ function parsePayRange(pay: string) {
 
 export function buildJobPostingSchema(job: Job, canonicalUrl: string) {
   const baseSalary = parsePayRange(job.pay);
-  // A closed job must not read as still-active to Google for Jobs -- back-date
-  // validThrough to "now" regardless of the original expiry.
-  const validThrough = job.status === "closed" ? new Date().toISOString() : job.expiresAt;
+  // A closed or expired job must not read as still-active to Google for Jobs
+  // -- back-date validThrough to "now" regardless of the original expiry.
+  const validThrough = job.status !== "published" ? new Date().toISOString() : job.expiresAt;
 
   return {
     "@context": "https://schema.org",

@@ -93,6 +93,18 @@ export default function EmployerPage() {
     setJobs((current) => current.map((job) => (job.id === jobId ? { ...job, status: "closed" } : job)));
   }
 
+  // US-31: an expired listing stopped being shown to candidates automatically
+  // (see the expire-listings cron) -- renewing republishes it for another 30
+  // days rather than making the employer re-post from scratch.
+  async function renewJob(jobId: string) {
+    const newExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase.from("jobs").update({ status: "published", expires_at: newExpiresAt }).eq("id", jobId).select("id");
+    if (error) { setMessage(error.message); return; }
+    if (!data || data.length === 0) { setMessage("Could not renew this listing — it may no longer belong to your account."); return; }
+    setJobs((current) => current.map((job) => (job.id === jobId ? { ...job, status: "published", expires_at: newExpiresAt } : job)));
+  }
+
   useEffect(() => {
     async function loadJobs() {
       const supabase = createSupabaseBrowserClient();
@@ -162,7 +174,7 @@ export default function EmployerPage() {
                       <p className="mt-1 text-sm text-[var(--muted)]">{job.company_name} · {job.city} · {job.pay_range}</p>
                       <div className="mt-3 flex flex-wrap items-center gap-3"><span className="text-xs font-semibold uppercase tracking-wider text-[var(--coral)]">{job.status}</span><span className="text-xs text-[var(--muted)]">{viewCounts[job.id] ?? 0} unique view{(viewCounts[job.id] ?? 0) === 1 ? "" : "s"}</span><span className="text-xs text-[var(--muted)]">· {applicationCounts[job.id] ?? 0} applicant{(applicationCounts[job.id] ?? 0) === 1 ? "" : "s"}</span></div>
                     </div>
-                    <div className="flex flex-wrap gap-4"><button onClick={() => void showApplicants(job.id)} className="text-sm font-bold text-[var(--ink)]">Applicants →</button><a href={buildJobHref(job.id, job.title, job.city, job.state)} className="text-sm font-bold text-[var(--coral)]">View listing →</a><a href={`/employer/jobs/${job.id}/edit`} className="text-sm font-bold text-[var(--ink)]">Edit →</a><a href={`/api/jobs/${job.id}/share-card`} className="text-sm font-bold text-[var(--muted)]">Download image ↓</a>{job.status === "published" && <button onClick={() => void closeJob(job.id)} className="text-sm font-bold text-[var(--muted)]">Close listing</button>}</div>
+                    <div className="flex flex-wrap gap-4"><button onClick={() => void showApplicants(job.id)} className="text-sm font-bold text-[var(--ink)]">Applicants →</button><a href={buildJobHref(job.id, job.title, job.city, job.state)} className="text-sm font-bold text-[var(--coral)]">View listing →</a><a href={`/employer/jobs/${job.id}/edit`} className="text-sm font-bold text-[var(--ink)]">Edit →</a><a href={`/api/jobs/${job.id}/share-card`} className="text-sm font-bold text-[var(--muted)]">Download image ↓</a>{job.status === "published" && <button onClick={() => void closeJob(job.id)} className="text-sm font-bold text-[var(--muted)]">Close listing</button>}{job.status === "expired" && <button onClick={() => void renewJob(job.id)} className="text-sm font-bold text-[var(--coral)]">Renew for 30 more days →</button>}</div>
                   </div>
                   {selectedJob === job.id && (
                     <div className="mt-5 border-t border-[var(--line)] pt-5">
