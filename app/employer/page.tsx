@@ -7,7 +7,7 @@ import { buildJobHref } from "@/lib/geo";
 import ReportButton from "@/components/ReportButton";
 
 type EmployerJob = { id: string; title: string; company_name: string; city: string; state: string; pay_range: string; status: string; created_at: string; expires_at: string | null };
-type Applicant = { id: string; created_at: string; candidate_id: string; candidate_profiles: { id: string; role_title: string; category: string | null; availability: string | null; available_from: string | null; available_until: string | null; curated_content: string | null }[] };
+type Applicant = { id: string; created_at: string; candidate_id: string; withdrawn_at: string | null; candidate_profiles: { id: string; role_title: string; category: string | null; availability: string | null; available_from: string | null; available_until: string | null; curated_content: string | null }[] };
 type UnlockedDetails = { workHistory: string | null; desiredPay: string | null; email: string | null; phone: string | null };
 
 const jobCategories = ["Food & hospitality", "Skilled trades", "Care & education", "Operations"] as const;
@@ -47,11 +47,11 @@ export default function EmployerPage() {
     setCategoryFilter("All");
     setAvailabilityFilter("");
     const supabase = createSupabaseBrowserClient();
-    const { data, error } = await supabase.from("applications").select("id, created_at, candidate_id, candidate_profiles(id, role_title, category, availability, available_from, available_until, curated_content)").eq("job_id", jobId).order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("applications").select("id, created_at, candidate_id, withdrawn_at, candidate_profiles(id, role_title, category, availability, available_from, available_until, curated_content)").eq("job_id", jobId).order("created_at", { ascending: false });
     if (error) { setMessage(error.message); return; }
     const rows = (data as unknown as Applicant[]) ?? [];
     setApplicants(rows);
-    setApplicationCounts((counts) => ({ ...counts, [jobId]: rows.length }));
+    setApplicationCounts((counts) => ({ ...counts, [jobId]: rows.filter((row) => !row.withdrawn_at).length }));
     for (const row of rows) {
       if (unlockedCandidateIds.has(row.candidate_id) && !unlockedDetails[row.candidate_id]) void loadUnlockedDetails(row.candidate_id);
     }
@@ -83,6 +83,14 @@ export default function EmployerPage() {
     }
   }
 
+  async function closeJob(jobId: string) {
+    if (!window.confirm("Close this listing? It will stop accepting applications and disappear from search — this can't be undone.")) return;
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.from("jobs").update({ status: "closed" }).eq("id", jobId);
+    if (error) { setMessage(error.message); return; }
+    setJobs((current) => current.map((job) => (job.id === jobId ? { ...job, status: "closed" } : job)));
+  }
+
   useEffect(() => {
     async function loadJobs() {
       const supabase = createSupabaseBrowserClient();
@@ -110,7 +118,7 @@ export default function EmployerPage() {
           return [job.id, count ?? 0] as const;
         })),
         Promise.all((data ?? []).map(async (job) => {
-          const { count } = await supabase.from("applications").select("*", { count: "exact", head: true }).eq("job_id", job.id);
+          const { count } = await supabase.from("applications").select("*", { count: "exact", head: true }).eq("job_id", job.id).is("withdrawn_at", null);
           return [job.id, count ?? 0] as const;
         })),
       ]);
@@ -151,7 +159,7 @@ export default function EmployerPage() {
                       <p className="mt-1 text-sm text-[var(--muted)]">{job.company_name} · {job.city} · {job.pay_range}</p>
                       <div className="mt-3 flex flex-wrap items-center gap-3"><span className="text-xs font-semibold uppercase tracking-wider text-[var(--coral)]">{job.status}</span><span className="text-xs text-[var(--muted)]">{viewCounts[job.id] ?? 0} unique view{(viewCounts[job.id] ?? 0) === 1 ? "" : "s"}</span><span className="text-xs text-[var(--muted)]">· {applicationCounts[job.id] ?? 0} applicant{(applicationCounts[job.id] ?? 0) === 1 ? "" : "s"}</span></div>
                     </div>
-                    <div className="flex gap-4"><button onClick={() => void showApplicants(job.id)} className="text-sm font-bold text-[var(--ink)]">Applicants →</button><a href={buildJobHref(job.id, job.title, job.city, job.state)} className="text-sm font-bold text-[var(--coral)]">View listing →</a><a href={`/api/jobs/${job.id}/share-card`} className="text-sm font-bold text-[var(--muted)]">Download image ↓</a></div>
+                    <div className="flex flex-wrap gap-4"><button onClick={() => void showApplicants(job.id)} className="text-sm font-bold text-[var(--ink)]">Applicants →</button><a href={buildJobHref(job.id, job.title, job.city, job.state)} className="text-sm font-bold text-[var(--coral)]">View listing →</a><a href={`/employer/jobs/${job.id}/edit`} className="text-sm font-bold text-[var(--ink)]">Edit →</a><a href={`/api/jobs/${job.id}/share-card`} className="text-sm font-bold text-[var(--muted)]">Download image ↓</a>{job.status === "published" && <button onClick={() => void closeJob(job.id)} className="text-sm font-bold text-[var(--muted)]">Close listing</button>}</div>
                   </div>
                   {selectedJob === job.id && (
                     <div className="mt-5 border-t border-[var(--line)] pt-5">
@@ -176,18 +184,19 @@ export default function EmployerPage() {
                             const profile = applicant.candidate_profiles?.[0];
                             const isUnlocked = unlockedCandidateIds.has(applicant.candidate_id);
                             const details = unlockedDetails[applicant.candidate_id];
+                            const isWithdrawn = Boolean(applicant.withdrawn_at);
                             return (
-                              <div key={applicant.id} className="rounded-xl bg-[var(--cream)] p-4">
+                              <div key={applicant.id} className={`rounded-xl bg-[var(--cream)] p-4 ${isWithdrawn ? "opacity-60" : ""}`}>
                                 <div className="flex items-start justify-between gap-3">
                                   <div>
                                     <p className="font-bold">{profile?.role_title ?? "Focused profile"}</p>
                                     <p className="mt-1 text-sm text-[var(--muted)]">Available: {profile?.availability ?? "Not specified"}{profile?.category ? ` · ${profile.category}` : ""}</p>
                                     {profile && formatWindow(profile.available_from, profile.available_until) && <p className="mt-1 text-xs font-semibold text-[var(--coral)]">{formatWindow(profile.available_from, profile.available_until)}</p>}
                                   </div>
-                                  <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase">{isUnlocked ? "Unlocked" : "Preview"}</span>
+                                  <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase">{isWithdrawn ? "Withdrawn" : isUnlocked ? "Unlocked" : "Preview"}</span>
                                 </div>
                                 <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">{profile?.curated_content ?? "Candidate profile pending approval."}</p>
-                                <p className="mt-3 text-xs text-[var(--muted)]">Applied {new Date(applicant.created_at).toLocaleDateString()}</p>
+                                <p className="mt-3 text-xs text-[var(--muted)]">Applied {new Date(applicant.created_at).toLocaleDateString()}{isWithdrawn && ` · Withdrawn ${new Date(applicant.withdrawn_at!).toLocaleDateString()}`}</p>
 
                                 {isUnlocked ? (
                                   <div className="mt-4 space-y-2 rounded-lg bg-white p-3 text-sm">
@@ -200,6 +209,8 @@ export default function EmployerPage() {
                                       </>
                                     ) : <p className="text-[var(--muted)]">Loading details...</p>}
                                   </div>
+                                ) : isWithdrawn ? (
+                                  <p className="mt-4 text-xs text-[var(--muted)]">This candidate withdrew their application.</p>
                                 ) : (
                                   <div className="mt-4 flex items-center justify-between gap-3">
                                     <button onClick={() => void unlockProfile(applicant.candidate_id, applicant.id)} disabled={unlockingCandidateId === applicant.candidate_id} className="text-xs font-bold text-[var(--coral)] disabled:opacity-60">

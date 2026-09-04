@@ -51,6 +51,10 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
   - *AC:* AI does not invent facts I didn't state; unstated fields are left blank, not filled in.
 - **US-4:** As an employer, I want to review and edit the AI-drafted listing before it publishes, so nothing goes live without my approval.
 - **US-5:** As an employer, I want posting to always be free, so I never pay just to advertise a position.
+- **US-54:** As an employer, I want to edit a published listing's details, so I can fix mistakes or update information without re-posting from scratch.
+  - *AC:* Same guardrails as original posting apply (§5) — pay range still required, 3–5 responsibilities, no contact info. Edits take effect immediately; no separate admin review, matching the original posting flow's own-approval model.
+- **US-55:** As an employer, I want to close a listing before it expires, so candidates stop applying to a role I've already filled.
+  - *AC:* A closed listing is removed from search, browse, and category pages immediately. Its URL stays reachable (no broken links from shares or search results) but shows a clear "no longer accepting applications" state instead of the apply form. Existing applications and any paid profile unlocks remain visible to the employer as a historical record.
 
 ### 4.2 Multi-role job postings
 
@@ -176,6 +180,8 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
   - *AC:* Shows job title, employer, date applied, and which of my profiles I applied with (relevant if I have multiple — §4.4).
 - **US-51:** As a candidate, I want to see whether an employer has viewed my profile for each application, so I know if I've actually been seen, not just added to a queue.
   - *AC:* "Viewed" reflects the same paid-view event as the notification in US-23 (§4.9) — an employer paying to view my full profile (US-16), not merely appearing in an employer's free-preview browse list (US-15), which happens for every application and isn't a meaningful signal.
+- **US-56:** As a candidate, I want to withdraw an application I've submitted, so I can remove it if my circumstances change.
+  - *AC:* A withdrawn application is marked as such for the employer, not silently deleted — if they already reviewed or paid to unlock the profile, that history stays visible. Withdrawing does not refund a paid unlock (US-16), since the unlock is a permanent, account-level entitlement (US-16's AC), not tied to a single application's lifecycle.
 
 ---
 

@@ -12,6 +12,7 @@ export type Job = {
   expiresAt: string | null;
   description: string;
   responsibilities: string[];
+  status: "published" | "closed";
 };
 
 function expiresIn30Days(postedAt: string) {
@@ -77,6 +78,6 @@ const demoJobsRaw = [
   },
 ];
 
-export const jobs: Job[] = demoJobsRaw.map((job) => ({ ...job, expiresAt: expiresIn30Days(job.postedAt) }));
+export const jobs: Job[] = demoJobsRaw.map((job) => ({ ...job, expiresAt: expiresIn30Days(job.postedAt), status: "published" as const }));
 
 export const categories = ["All jobs", "Food & hospitality", "Skilled trades", "Care & education", "Operations"];

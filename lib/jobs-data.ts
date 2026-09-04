@@ -24,6 +24,7 @@ type DbJobRow = {
   responsibilities: string[] | null;
   created_at: string;
   expires_at: string | null;
+  status: "published" | "closed";
 };
 
 function fromDbRow(row: DbJobRow): Job {
@@ -41,6 +42,7 @@ function fromDbRow(row: DbJobRow): Job {
     expiresAt: row.expires_at,
     description: row.description ?? "A local opportunity from a nearby business.",
     responsibilities: row.responsibilities ?? [],
+    status: row.status,
   };
 }
 
@@ -51,7 +53,7 @@ export async function getAllJobs(): Promise<Job[]> {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("jobs")
-    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at")
+    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at, status")
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
@@ -69,9 +71,9 @@ export async function getJobBySlug(slug: string): Promise<Job | undefined> {
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("jobs")
-    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at")
+    .select("id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at, status")
     .eq("id", idMatch[0])
-    .eq("status", "published")
+    .in("status", ["published", "closed"])
     .maybeSingle();
 
   return data ? fromDbRow(data as DbJobRow) : undefined;

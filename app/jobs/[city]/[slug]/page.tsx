@@ -112,7 +112,7 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
         <p className="text-sm font-semibold text-[var(--muted)]"><Link href="/jobs" className="hover:text-[var(--ink)]">All jobs</Link> / <Link href={`/jobs/${city}`} className="hover:text-[var(--ink)]">{job.city}, {job.state}</Link></p>
         <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_300px]">
           <article>
-            <span className="rounded-full bg-[var(--mint)] px-3 py-1 text-[11px] font-bold uppercase">Open role</span>
+            <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase ${job.status === "closed" ? "bg-[var(--line)] text-[var(--muted)]" : "bg-[var(--mint)]"}`}>{job.status === "closed" ? "No longer accepting applications" : "Open role"}</span>
             <h1 className="display mt-6 text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">{job.title}</h1>
             <p className="mt-5 text-lg font-semibold text-[var(--muted)]">{job.company} · {job.city}, {job.state} · Posted {timeAgo(job.postedAt)}</p>
             <div className="mt-10 flex flex-wrap gap-2 text-sm font-semibold"><span className="rounded bg-white px-3 py-2">{job.pay}</span><span className="rounded bg-white px-3 py-2">{job.type}</span><span className="rounded bg-white px-3 py-2">{job.category}</span></div>
@@ -127,11 +127,22 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
             </div>
           </article>
           <aside className="h-fit rounded-2xl bg-[var(--ink)] p-6 text-white">
-            <p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--yellow)]">Ready to apply?</p>
-            <h2 className="display mt-5 text-3xl font-bold">Keep it simple.</h2>
-            <p className="mt-3 text-sm leading-6 text-white/70">Create a role-specific profile and apply for free.</p>
-            <ApplyForm jobId={job.id} jobTitle={job.title} jobCategory={job.category} />
-            <p className="mt-4 text-center text-xs text-white/50">No application fees</p>
+            {job.status === "closed" ? (
+              <>
+                <p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--yellow)]">This role is filled</p>
+                <h2 className="display mt-5 text-3xl font-bold">Not accepting applications.</h2>
+                <p className="mt-3 text-sm leading-6 text-white/70">This employer has closed this listing. Check out other open roles nearby.</p>
+                <Link href="/jobs" className="mt-7 block w-full rounded-full bg-[var(--yellow)] px-5 py-4 text-center font-bold text-[var(--ink)]">Browse open jobs <span aria-hidden="true">→</span></Link>
+              </>
+            ) : (
+              <>
+                <p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--yellow)]">Ready to apply?</p>
+                <h2 className="display mt-5 text-3xl font-bold">Keep it simple.</h2>
+                <p className="mt-3 text-sm leading-6 text-white/70">Create a role-specific profile and apply for free.</p>
+                <ApplyForm jobId={job.id} jobTitle={job.title} jobCategory={job.category} />
+                <p className="mt-4 text-center text-xs text-white/50">No application fees</p>
+              </>
+            )}
           </aside>
         </div>
       </main>

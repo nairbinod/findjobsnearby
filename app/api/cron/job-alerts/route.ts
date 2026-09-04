@@ -37,6 +37,7 @@ export async function GET(request: Request) {
     expiresAt: null,
     description: "",
     responsibilities: [],
+    status: "published" as const,
   }));
 
   let sent = 0;
