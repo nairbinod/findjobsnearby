@@ -19,6 +19,8 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
   const [roleTitle, setRoleTitle] = useState(jobTitle);
   const [category, setCategory] = useState<string>(jobCategory ?? jobCategories[0]);
   const [availability, setAvailability] = useState("");
+  const [availableFrom, setAvailableFrom] = useState("");
+  const [availableUntil, setAvailableUntil] = useState("");
   const [desiredPay, setDesiredPay] = useState("");
   const [workHistory, setWorkHistory] = useState("");
   const [approved, setApproved] = useState(false);
@@ -132,6 +134,8 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
       role_title: roleTitle,
       category,
       availability,
+      available_from: availableFrom || null,
+      available_until: availableUntil || null,
       curated_content: curatedContent,
       approved_at: approved ? new Date().toISOString() : null,
     }).select("id").single();
@@ -193,6 +197,13 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
           <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Role title<input required value={roleTitle} onChange={(event) => setRoleTitle(event.target.value)} className="mt-2 min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]/30" /></label>
           <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Category<select value={category} onChange={(event) => setCategory(event.target.value)} className="mt-2 min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal normal-case tracking-normal text-[var(--ink)] outline-none focus:border-[var(--yellow)]">{jobCategories.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
           <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Availability<input required value={availability} onChange={(event) => setAvailability(event.target.value)} placeholder="e.g. Weekday mornings" className="mt-2 min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]/30" /></label>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-white/60">Available for this role <span className="normal-case font-normal text-white/40">(optional — for seasonal work)</span></p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <input type="date" value={availableFrom} onChange={(event) => setAvailableFrom(event.target.value)} className="min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal text-[var(--ink)] outline-none focus:border-[var(--yellow)]" />
+              <input type="date" value={availableUntil} onChange={(event) => setAvailableUntil(event.target.value)} className="min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal text-[var(--ink)] outline-none focus:border-[var(--yellow)]" />
+            </div>
+          </div>
           <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Desired pay <span className="normal-case font-normal text-white/40">(optional)</span><input value={desiredPay} onChange={(event) => setDesiredPay(event.target.value)} placeholder="e.g. $18-20/hr" className="mt-2 min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]/30" /></label>
           <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Work history<textarea required value={workHistory} onChange={(event) => setWorkHistory(event.target.value)} rows={4} placeholder="A few notes about your experience" className="mt-2 w-full resize-none rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]/30" /></label>
         </>

@@ -7,9 +7,16 @@ import { buildJobHref } from "@/lib/geo";
 import ReportButton from "@/components/ReportButton";
 
 type EmployerJob = { id: string; title: string; company_name: string; city: string; state: string; pay_range: string; status: string; created_at: string; expires_at: string | null };
-type Applicant = { id: string; created_at: string; candidate_profiles: { id: string; role_title: string; category: string | null; availability: string | null; curated_content: string | null }[] };
+type Applicant = { id: string; created_at: string; candidate_profiles: { id: string; role_title: string; category: string | null; availability: string | null; available_from: string | null; available_until: string | null; curated_content: string | null }[] };
 
 const jobCategories = ["Food & hospitality", "Skilled trades", "Care & education", "Operations"] as const;
+
+function formatWindow(from: string | null, until: string | null) {
+  if (!from && !until) return null;
+  const fmt = (value: string) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (from && until) return `${fmt(from)} – ${fmt(until)}`;
+  return from ? `From ${fmt(from)}` : `Through ${fmt(until!)}`;
+}
 
 export default function EmployerPage() {
   const [jobs, setJobs] = useState<EmployerJob[]>([]);
@@ -25,7 +32,7 @@ export default function EmployerPage() {
     setCategoryFilter("All");
     setAvailabilityFilter("");
     const supabase = createSupabaseBrowserClient();
-    const { data, error } = await supabase.from("applications").select("id, created_at, candidate_profiles(id, role_title, category, availability, curated_content)").eq("job_id", jobId).order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("applications").select("id, created_at, candidate_profiles(id, role_title, category, availability, available_from, available_until, curated_content)").eq("job_id", jobId).order("created_at", { ascending: false });
     if (error) setMessage(error.message);
     else setApplicants((data as unknown as Applicant[]) ?? []);
   }
@@ -105,6 +112,7 @@ export default function EmployerPage() {
                                   <div>
                                     <p className="font-bold">{profile?.role_title ?? "Focused profile"}</p>
                                     <p className="mt-1 text-sm text-[var(--muted)]">Available: {profile?.availability ?? "Not specified"}{profile?.category ? ` · ${profile.category}` : ""}</p>
+                                    {profile && formatWindow(profile.available_from, profile.available_until) && <p className="mt-1 text-xs font-semibold text-[var(--coral)]">{formatWindow(profile.available_from, profile.available_until)}</p>}
                                   </div>
                                   <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase">Preview</span>
                                 </div>
