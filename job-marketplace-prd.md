@@ -101,6 +101,8 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
 - **US-22:** As an employer, I want to be notified of new applications, so I know to review them.
 - **US-23:** As a candidate, I want to be notified when an employer pays to view my profile, so I know someone is interested.
 - **US-24:** As a candidate with a seasonal profile, I want to be notified when season-appropriate jobs return, so I don't have to remember to check back.
+- **US-52:** As a job seeker visiting the homepage, I want to sign up with just my email to get notified about new job postings, so I can hear about opportunities without creating a full account first.
+  - *AC:* Requires only an email address — no password, no profile, no full account. Distinct from full candidate signup (§4.3) and from the seasonal-profile matching in US-24, which requires an approved profile; this is a lower-friction, top-of-funnel option available to anonymous visitors. An optional category filter narrows which postings trigger an alert; an unfiltered signup gets all new listings. Sent via Resend (§9) as a periodic digest, not one email per listing, with an unsubscribe link on every send.
 
 ### 4.10 Trust & safety
 
@@ -134,6 +136,7 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
 
 - **US-38:** As a visitor, I want the homepage to be SEO-optimized (server-rendered, structured data, fast-loading), so it ranks well and loads quickly from organic search.
 - **US-39:** As a job seeker, I want clear, one-click access from the homepage to search or browse jobs, so I can start looking immediately without hunting through a generic menu.
+  - *AC:* The homepage also carries the low-friction job-alert email signup from US-52 (§4.9) for visitors not ready to browse yet.
 - **US-40:** As an employer, I want clear, one-click access from the homepage to post a job, so I can start immediately without hunting for the right entry point.
   - *AC:* Both paths are equally prominent on the homepage — neither audience is the default and the other an afterthought.
 

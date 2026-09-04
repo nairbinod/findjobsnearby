@@ -5,6 +5,7 @@ import { getAllJobs, jobHref } from "@/lib/jobs-data";
 import { timeAgo } from "@/lib/time";
 import EmployerBanner from "@/components/EmployerBanner";
 import HomeJobsList from "@/components/HomeJobsList";
+import JobAlertSignup from "@/components/JobAlertSignup";
 
 const title = "FindJobsNearBy | Local work, without the runaround";
 const description = "Free to post and apply for local jobs across Dallas-Fort Worth, Texas. Small businesses post AI-assisted listings at no cost; job seekers apply for free.";
@@ -38,6 +39,8 @@ export default async function Home() {
         <section className="mx-auto grid max-w-[1240px] gap-5 px-6 py-16 sm:grid-cols-3 lg:px-10" id="how-it-works"><div className="border-t-2 border-[var(--ink)] pt-4"><p className="display text-3xl font-bold">01 <span className="text-[var(--coral)]">→</span></p><h2 className="mt-5 text-lg font-bold">Search like a local</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Real jobs, in real neighborhoods, from people who are actually hiring.</p></div><div className="border-t-2 border-[var(--ink)] pt-4"><p className="display text-3xl font-bold">02 <span className="text-[var(--coral)]">→</span></p><h2 className="mt-5 text-lg font-bold">Apply in minutes</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">Build a focused profile once. Use it for every role that feels right.</p></div><div className="border-t-2 border-[var(--ink)] pt-4"><p className="display text-3xl font-bold">03 <span className="text-[var(--coral)]">→</span></p><h2 className="mt-5 text-lg font-bold">Get a real response</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">We help local businesses and local people connect directly.</p></div></section>
 
         <section id="jobs" className="bg-white px-6 py-16 lg:px-10"><div className="mx-auto max-w-[1240px]"><div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"><div><p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Fresh in the neighborhood</p><h2 className="display text-4xl font-bold tracking-[-.03em] sm:text-5xl">Jobs worth getting up for.</h2></div><Link href="/jobs" className="text-sm font-bold underline decoration-[var(--coral)] decoration-2 underline-offset-4">View all jobs <span aria-hidden="true">→</span></Link></div><HomeJobsList jobs={jobs} categories={categories} jobHrefs={jobHrefs} /></div></section>
+
+        <JobAlertSignup />
 
         <section id="post" className="mx-4 my-16 overflow-hidden rounded-[24px] bg-[var(--ink)] px-6 py-12 text-white sm:px-12 lg:mx-10 lg:px-20"><div className="grid items-center gap-8 lg:grid-cols-[1fr_auto]"><div><p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[var(--yellow)]">For the people doing the hiring</p><h2 className="display max-w-[650px] text-4xl font-bold leading-tight sm:text-5xl">Your next great hire might live five minutes away.</h2><p className="mt-5 max-w-[570px] leading-7 text-white/70">Post for free. Tell us what you need. Our AI helps you turn a few quick notes into a clear listing you can approve and share.</p></div><Link href="/post" className="rounded-full bg-[var(--yellow)] px-7 py-4 text-center font-bold text-[var(--ink)] transition-transform hover:-translate-y-0.5">Post a job for free <span aria-hidden="true">↗</span></Link></div></section>
       </main>

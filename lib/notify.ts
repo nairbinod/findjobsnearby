@@ -121,3 +121,35 @@ export async function notifySeasonReturn(candidateId: string, jobs: Job[]) {
 
   for (const job of unseen) await logNotification(admin, "season_return", candidateId, job.id);
 }
+
+/** US-52: digest email for the account-free homepage job-alert signup.
+ * Uses job_alert_sent_log for dedup rather than notification_log, since a
+ * subscriber has no accounts row to key off of. */
+export async function sendJobAlertDigest(subscriber: { id: string; email: string; unsubscribe_token: string }, jobs: Job[]): Promise<boolean> {
+  const admin = createSupabaseAdminClient();
+
+  const unseen: Job[] = [];
+  for (const job of jobs) {
+    const { data } = await admin.from("job_alert_sent_log").select("id").eq("subscriber_id", subscriber.id).eq("job_id", job.id).maybeSingle();
+    if (!data) unseen.push(job);
+  }
+  if (unseen.length === 0) return false;
+
+  const listItems = unseen.map((job) => `<li style="margin-bottom:8px;"><a href="${SITE_URL}${buildJobHref(job.id, job.title, job.city, job.state)}" style="color:#ef725d;font-weight:700;text-decoration:none;">${job.title}</a> — ${job.company}, ${job.city} · ${job.pay}</li>`).join("");
+  const unsubscribeUrl = `${SITE_URL}/unsubscribe?token=${subscriber.unsubscribe_token}`;
+
+  await getResendClient().emails.send({
+    from: NOTIFICATIONS_FROM,
+    to: subscriber.email,
+    subject: unseen.length === 1 ? "A new job just went up" : `${unseen.length} new jobs just went up`,
+    html: wrap(
+      "New jobs on FindJobsNearBy",
+      `<h1 style="font-size:22px;color:#152d2a;margin:0 0 12px;">Fresh listings for you.</h1>
+       <ul style="padding-left:18px;font-size:15px;">${listItems}</ul>
+       <p style="margin-top:24px;font-size:12px;color:#64716d;"><a href="${unsubscribeUrl}" style="color:#64716d;">Unsubscribe from job alerts</a></p>`,
+    ),
+  });
+
+  for (const job of unseen) await admin.from("job_alert_sent_log").insert({ subscriber_id: subscriber.id, job_id: job.id });
+  return true;
+}
