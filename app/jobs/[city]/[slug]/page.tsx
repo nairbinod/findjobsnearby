@@ -93,8 +93,11 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
   }
 
   const { job } = resolved;
-  const canonicalCity = citySlug(job.city, job.state);
-  if (canonicalCity !== city) permanentRedirect(jobHref(job));
+  const canonicalHref = jobHref(job);
+  // Catches city mismatches, stale titles after an edit, and old-format
+  // (full-UUID) links -- all should 301 to the current canonical URL rather
+  // than serving duplicate content at two paths.
+  if (`/jobs/${city}/${slug}` !== canonicalHref) permanentRedirect(canonicalHref);
 
   const isDemoJob = job.id.startsWith("demo-");
   if (!isDemoJob) await recordJobView(job.id);

@@ -77,9 +77,12 @@ export function parseCategorySlug(slug: string) {
 }
 
 /** Pure, client-safe slug builder — no data fetching, so it can be reused
- * from client components (e.g. the employer dashboard's job links). */
+ * from client components (e.g. the employer dashboard's job links). Only an
+ * 8-char prefix of the id is used (not the full UUID) for a shorter, cleaner
+ * URL -- collisions are effectively impossible at this scale, and
+ * getJobBySlug resolves the prefix back to the full row. */
 export function buildJobHref(id: string, title: string, city: string, state: string) {
   const isDemo = id.startsWith("demo-");
-  const slug = isDemo ? id : `${kebab(title)}-${id}`;
+  const slug = isDemo ? id : `${kebab(title)}-${id.slice(0, 8)}`;
   return `/jobs/${citySlug(city, state)}/${slug}`;
 }
