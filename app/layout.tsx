@@ -30,6 +30,9 @@ export const metadata: Metadata = {
     title: "FindJobsNearBy | Local work, without the runaround",
     description: "Free to post and apply for local jobs across Dallas-Fort Worth.",
   },
+  verification: {
+    google: "c4WsnhxMgwVyinl9yxL_ofUGWVwFhZ4d2EIe7vbcGWg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
