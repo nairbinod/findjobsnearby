@@ -7,7 +7,8 @@ import { buildJobHref } from "@/lib/geo";
 import ReportButton from "@/components/ReportButton";
 
 type EmployerJob = { id: string; title: string; company_name: string; city: string; state: string; pay_range: string; status: string; created_at: string; expires_at: string | null };
-type Applicant = { id: string; created_at: string; candidate_profiles: { id: string; role_title: string; category: string | null; availability: string | null; available_from: string | null; available_until: string | null; curated_content: string | null }[] };
+type Applicant = { id: string; created_at: string; candidate_id: string; candidate_profiles: { id: string; role_title: string; category: string | null; availability: string | null; available_from: string | null; available_until: string | null; curated_content: string | null }[] };
+type UnlockedDetails = { workHistory: string | null; desiredPay: string | null; email: string | null; phone: string | null };
 
 const jobCategories = ["Food & hospitality", "Skilled trades", "Care & education", "Operations"] as const;
 
@@ -28,16 +29,58 @@ export default function EmployerPage() {
   const [availabilityFilter, setAvailabilityFilter] = useState("");
   const [message, setMessage] = useState("Loading your jobs...");
 
+  const [freeViewsUsed, setFreeViewsUsed] = useState(0);
+  const [unlockedCandidateIds, setUnlockedCandidateIds] = useState<Set<string>>(new Set());
+  const [unlockedDetails, setUnlockedDetails] = useState<Record<string, UnlockedDetails>>({});
+  const [unlockingCandidateId, setUnlockingCandidateId] = useState<string | null>(null);
+  const [unlockMessage, setUnlockMessage] = useState("");
+
+  async function loadUnlockedDetails(candidateId: string) {
+    const response = await fetch(`/api/candidates/${candidateId}/unlocked-profile`);
+    if (!response.ok) return;
+    const data = await response.json();
+    setUnlockedDetails((current) => ({ ...current, [candidateId]: data }));
+  }
+
   async function showApplicants(jobId: string) {
     setSelectedJob(jobId);
     setCategoryFilter("All");
     setAvailabilityFilter("");
     const supabase = createSupabaseBrowserClient();
-    const { data, error } = await supabase.from("applications").select("id, created_at, candidate_profiles(id, role_title, category, availability, available_from, available_until, curated_content)").eq("job_id", jobId).order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("applications").select("id, created_at, candidate_id, candidate_profiles(id, role_title, category, availability, available_from, available_until, curated_content)").eq("job_id", jobId).order("created_at", { ascending: false });
     if (error) { setMessage(error.message); return; }
     const rows = (data as unknown as Applicant[]) ?? [];
     setApplicants(rows);
     setApplicationCounts((counts) => ({ ...counts, [jobId]: rows.length }));
+    for (const row of rows) {
+      if (unlockedCandidateIds.has(row.candidate_id) && !unlockedDetails[row.candidate_id]) void loadUnlockedDetails(row.candidate_id);
+    }
+  }
+
+  async function unlockProfile(candidateId: string, applicationId: string) {
+    setUnlockingCandidateId(candidateId);
+    setUnlockMessage("");
+    try {
+      const response = await fetch("/api/unlock-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidateId, applicationId }),
+      });
+      const result = await response.json();
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+      if (result.unlocked) {
+        setUnlockedCandidateIds((ids) => new Set(ids).add(candidateId));
+        if (result.free) setFreeViewsUsed((n) => Math.min(2, n + 1));
+        await loadUnlockedDetails(candidateId);
+      } else if (result.error) {
+        setUnlockMessage(result.error);
+      }
+    } finally {
+      setUnlockingCandidateId(null);
+    }
   }
 
   useEffect(() => {
@@ -45,10 +88,21 @@ export default function EmployerPage() {
       const supabase = createSupabaseBrowserClient();
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) { setMessage("Sign in with your employer account to manage jobs."); return; }
-      const { data, error } = await supabase.from("jobs").select("id, title, company_name, city, state, pay_range, status, created_at, expires_at").eq("employer_id", userData.user.id).order("created_at", { ascending: false });
+      const [{ data, error }, { data: unlocks }, { data: account }] = await Promise.all([
+        supabase.from("jobs").select("id, title, company_name, city, state, pay_range, status, created_at, expires_at").eq("employer_id", userData.user.id).order("created_at", { ascending: false }),
+        supabase.from("paid_profile_views").select("candidate_id").eq("employer_id", userData.user.id),
+        supabase.from("accounts").select("free_views_used").eq("id", userData.user.id).maybeSingle(),
+      ]);
       if (error) { setMessage(error.message); return; }
       setJobs(data ?? []);
       setMessage(data?.length ? "" : "You have not posted a job yet.");
+      setUnlockedCandidateIds(new Set((unlocks ?? []).map((u) => u.candidate_id)));
+      setFreeViewsUsed(account?.free_views_used ?? 0);
+
+      if (new URLSearchParams(window.location.search).get("unlocked")) {
+        setUnlockMessage("Payment received — refreshing your unlocked profiles...");
+        setTimeout(() => void loadJobs(), 2500);
+      }
 
       const [viewCountEntries, applicationCountEntries] = await Promise.all([
         Promise.all((data ?? []).map(async (job) => {
@@ -73,17 +127,21 @@ export default function EmployerPage() {
     return matchesCategory && matchesAvailability;
   }), [applicants, categoryFilter, availabilityFilter]);
 
+  const freeViewsLeft = Math.max(0, 2 - freeViewsUsed);
+
   return (
     <div className="min-h-screen bg-[var(--cream)]">
       <header className="mx-auto flex max-w-[1100px] items-center justify-between px-6 py-6 lg:px-10"><a href="/" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></a><a href="/post" className="rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-bold text-white">Post a job <span aria-hidden="true">↗</span></a></header>
       <main className="mx-auto max-w-[1100px] px-6 pb-20 pt-12 lg:px-10">
         <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Employer workspace</p>
         <h1 className="display text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">Your local<br />hiring board.</h1>
+        {unlockMessage && <p role="status" className="mt-4 rounded-xl bg-[var(--mint)] px-4 py-3 text-sm font-semibold">{unlockMessage}</p>}
         {message && !jobs.length ? (
           <div className="mt-12 rounded-2xl border border-[var(--line)] bg-white p-8"><p className="text-lg font-semibold">{message}</p><a href="/auth" className="mt-5 inline-block rounded-full bg-[var(--coral)] px-6 py-3 text-sm font-bold text-white">Sign in <span aria-hidden="true">→</span></a></div>
         ) : (
           <section className="mt-12">
             <div className="flex items-end justify-between"><h2 className="display text-3xl font-bold">Your listings</h2><span className="text-sm text-[var(--muted)]">{jobs.length} total</span></div>
+            {freeViewsLeft > 0 && <p className="mt-3 text-sm font-semibold text-[var(--coral)]">{freeViewsLeft} free profile unlock{freeViewsLeft === 1 ? "" : "s"} remaining on your account.</p>}
             <div className="mt-6 space-y-3">
               {jobs.map((job) => (
                 <article key={job.id} className="rounded-2xl border border-[var(--line)] bg-white p-5">
@@ -116,6 +174,8 @@ export default function EmployerPage() {
                         <div className="mt-4 grid gap-3 md:grid-cols-2">
                           {visibleApplicants.map((applicant) => {
                             const profile = applicant.candidate_profiles?.[0];
+                            const isUnlocked = unlockedCandidateIds.has(applicant.candidate_id);
+                            const details = unlockedDetails[applicant.candidate_id];
                             return (
                               <div key={applicant.id} className="rounded-xl bg-[var(--cream)] p-4">
                                 <div className="flex items-start justify-between gap-3">
@@ -124,14 +184,30 @@ export default function EmployerPage() {
                                     <p className="mt-1 text-sm text-[var(--muted)]">Available: {profile?.availability ?? "Not specified"}{profile?.category ? ` · ${profile.category}` : ""}</p>
                                     {profile && formatWindow(profile.available_from, profile.available_until) && <p className="mt-1 text-xs font-semibold text-[var(--coral)]">{formatWindow(profile.available_from, profile.available_until)}</p>}
                                   </div>
-                                  <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase">Preview</span>
+                                  <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase">{isUnlocked ? "Unlocked" : "Preview"}</span>
                                 </div>
                                 <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">{profile?.curated_content ?? "Candidate profile pending approval."}</p>
                                 <p className="mt-3 text-xs text-[var(--muted)]">Applied {new Date(applicant.created_at).toLocaleDateString()}</p>
-                                <div className="mt-4 flex items-center justify-between gap-3">
-                                  <button className="text-xs font-bold text-[var(--coral)]">Unlock full profile · $2.99</button>
-                                  {profile && <ReportButton targetType="profile" targetId={profile.id} label="Report profile" />}
-                                </div>
+
+                                {isUnlocked ? (
+                                  <div className="mt-4 space-y-2 rounded-lg bg-white p-3 text-sm">
+                                    {details ? (
+                                      <>
+                                        {details.workHistory && <p><span className="font-bold">Work history:</span> {details.workHistory}</p>}
+                                        {details.desiredPay && <p><span className="font-bold">Desired pay:</span> {details.desiredPay}</p>}
+                                        {details.email && <p><span className="font-bold">Email:</span> {details.email}</p>}
+                                        {details.phone && <p><span className="font-bold">Phone:</span> {details.phone}</p>}
+                                      </>
+                                    ) : <p className="text-[var(--muted)]">Loading details...</p>}
+                                  </div>
+                                ) : (
+                                  <div className="mt-4 flex items-center justify-between gap-3">
+                                    <button onClick={() => void unlockProfile(applicant.candidate_id, applicant.id)} disabled={unlockingCandidateId === applicant.candidate_id} className="text-xs font-bold text-[var(--coral)] disabled:opacity-60">
+                                      {unlockingCandidateId === applicant.candidate_id ? "Unlocking..." : freeViewsLeft > 0 ? "Unlock full profile · Free" : "Unlock full profile · $2.99"}
+                                    </button>
+                                    {profile && <ReportButton targetType="profile" targetId={profile.id} label="Report profile" />}
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
