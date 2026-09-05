@@ -141,9 +141,7 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
 
 ### 4.12 Job listing video
 
-- **US-32:** As an employer, I want a short auto-generated video of my listing that I can download for free, so I can share it on my own social media.
-- **US-33:** As an employer with a boosted listing, I want my video also posted to FindJobsNearBy's own TikTok/Instagram/Facebook accounts, so I get extra exposure beyond the platform itself.
-  - *AC:* Phase 1 posting to these accounts is manual (admin-uploaded), not API-automated.
+Deferred to Phase 2 — see §12. Phase 1 ships a static downloadable share image (built and live) as the free, lower-effort substitute for US-32's video.
 
 ### 4.13 Referral
 
@@ -275,4 +273,13 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
 
 - Growth tier overage price ($2.25/view) not independently validated — confirm before launch. Higher-stakes now that Growth ships with Phase 1 rather than after usage data exists.
 - How much of "candidate search" the Free tier gets before it cannibalizes the reason to upgrade to Growth.
-- Whether multi-metro expansion eventually needs per-city social accounts instead of one central account (§4.12).
+- Whether multi-metro expansion eventually needs per-city social accounts instead of one central account (§12).
+
+---
+
+## 12. Phase 2 Backlog
+
+- **US-32:** As an employer, I want a short auto-generated video of my listing that I can download for free, so I can share it on my own social media.
+  - *AC:* Phase 1 shipped a static downloadable share image as the free substitute (§4.12) — this revisits actual video once there's bandwidth beyond that.
+- **US-33:** As an employer with a boosted listing, I want my video also posted to FindJobsNearBy's own TikTok/Instagram/Facebook accounts, so I get extra exposure beyond the platform itself.
+  - *AC:* Posting to these accounts is manual (admin-uploaded), not API-automated, even once built. Depends on US-32 and on US-19/20 (job boosting) existing first.
