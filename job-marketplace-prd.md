@@ -59,6 +59,9 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
   - *AC:* Address is optional — an employer who doesn't want to publish an exact location can leave it blank and the listing still shows city/state as before. When provided, it appears on the job detail page and feeds the `streetAddress` field of the listing's JobPosting structured data.
 - **US-58:** As an employer, I want to mark a listing as "Urgently Hiring," so candidates notice it needs to be filled fast.
   - *AC:* The flag is a simple toggle available at posting and at any later edit. When set, an "Urgently Hiring" badge appears everywhere the listing is shown to candidates — job detail page, browse/search results, city and category pages, the homepage feed, and the downloadable share image.
+- **US-59:** As an employer, I want to optionally convert my job's requirements into a short checklist (e.g., "reliable transportation," "available weekends," "2+ years experience") instead of relying only on free text, so expectations are explicit and applicants can self-assess before applying.
+  - *AC:* Optional and capped at 3–6 items — skippable entirely, so it never blocks the free, minimal-friction posting flow (§3). The AI drafting assistant (US-3) may suggest checklist items from what the employer already typed, but each item must be individually reviewed and confirmed by the employer before saving — nothing is auto-published unconfirmed, consistent with §5's human-approval guardrail.
+  - *AC:* Displayed on the public job listing page itself, not only inside the apply flow, so a candidate can self-assess before starting an application. Also feeds `qualifications`/`skills` in the listing's JobPosting structured data (§6), improving Google for Jobs eligibility.
 
 ### 4.2 Multi-role job postings
 
@@ -83,6 +86,10 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
 
 - **US-13:** As a candidate, I want to apply to jobs for free using an existing profile or a new role-specific one, so applying never costs me anything.
 - **US-14:** As a candidate, I want to search/filter jobs by city, category, and pay range, so I can find relevant openings quickly.
+- **US-60:** As a candidate, I want to check off which of a job's requirements I meet when applying, so I can quickly signal fit without writing a full response for each one.
+  - *AC:* An optional free-text box remains available for additional context per application, separate from and in addition to the checklist.
+  - *AC:* Leaving items unchecked never blocks submission — a candidate can apply having met 0 of the listed requirements if they choose to.
+  - *AC:* Submission requires checking a separate attestation box ("My selections above are truthful to the best of my knowledge") before the application can be sent — this is required, not optional, since it's what gives US-61's "self-reported, not verified" disclosure real weight rather than just a legal hedge.
 
 ### 4.6 Discovering & paying to contact candidates
 
@@ -105,6 +112,10 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
 - **US-21:** As an employer, I want to see application counts and filter my applicant pool by profile category and availability, so I can manage a job's applicants without needing a full ATS.
 - **US-21a:** As an employer, I want to see how many unique people have viewed my job listing, so I can gauge interest even before anyone applies.
   - *AC:* Counts unique visitors, not raw page loads. Free for all employers (Phase 1). Distinct from Growth's deeper "analytics" perk (§4.16), which covers trends and view-to-application conversion over time — this is the basic count, not the dashboard.
+- **US-61:** As an employer, I want to see each applicant's requirement match as a visible breakdown (e.g., "7 of 9 met," with which ones), so I can scan applicants faster.
+  - *AC:* Informational only — applicants are never auto-sorted, ranked, filtered, or scored based on this breakdown. All applicants remain visible regardless of match count, and no composite "score" is calculated or displayed.
+  - *AC:* Match data is self-reported by the candidate and is not independently verified by the system.
+  - *AC:* Free for all employers, matching the existing free applicant-filtering baseline (US-21) — not a Growth-exclusive feature.
 
 ### 4.9 Notifications
 
