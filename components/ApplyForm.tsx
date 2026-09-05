@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { containsContactInfo, CONTACT_INFO_MESSAGE } from "@/lib/contact-guard";
 
-type ApplyFormProps = { jobId: string; jobTitle: string; jobCategory?: string };
+type ApplyFormProps = { jobId: string; jobTitle: string; jobCategory?: string; jobRequirements?: string[] };
 
 type ExistingProfile = { id: string; role_title: string; category: string | null; availability: string | null };
 
@@ -18,7 +18,7 @@ function notifyNewApplication(applicationId: string) {
   });
 }
 
-export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormProps) {
+export default function ApplyForm({ jobId, jobTitle, jobCategory, jobRequirements = [] }: ApplyFormProps) {
   const [open, setOpen] = useState(false);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
   const [existingProfiles, setExistingProfiles] = useState<ExistingProfile[]>([]);
@@ -39,6 +39,22 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
   const [drafting, setDrafting] = useState(false);
   const [curatedContent, setCuratedContent] = useState("");
   const [flags, setFlags] = useState<string[]>([]);
+
+  // US-60: candidate self-checks which requirements they meet, plus a
+  // required truthfulness attestation -- only relevant when the job
+  // actually has a requirements checklist (US-59 is optional at posting).
+  const [checkedRequirements, setCheckedRequirements] = useState<Set<string>>(new Set());
+  const [requirementsContext, setRequirementsContext] = useState("");
+  const [attested, setAttested] = useState(false);
+
+  function toggleRequirement(item: string) {
+    setCheckedRequirements((current) => {
+      const next = new Set(current);
+      if (next.has(item)) next.delete(item);
+      else next.add(item);
+      return next;
+    });
+  }
 
   async function openForm() {
     setOpen(true);
@@ -89,6 +105,14 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
     event.preventDefault();
 
     if (selectedProfileId !== "new") {
+      if (jobRequirements.length > 0 && !attested) {
+        setMessage("Check the box confirming your selections are truthful before applying.");
+        return;
+      }
+      if (containsContactInfo(requirementsContext)) {
+        setMessage(CONTACT_INFO_MESSAGE);
+        return;
+      }
       setBusy(true);
       setMessage("");
       const supabase = createSupabaseBrowserClient();
@@ -107,6 +131,11 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
         job_id: jobId,
         candidate_id: userData.user.id,
         profile_id: selectedProfileId,
+        ...(jobRequirements.length > 0 ? {
+          requirement_matches: Array.from(checkedRequirements),
+          requirement_notes: requirementsContext.trim() || null,
+          requirements_attested_at: new Date().toISOString(),
+        } : {}),
       }).select("id").single();
       setMessage(applicationError ? applicationError.message : "Application sent. The employer can now review your profile.");
       if (!applicationError && newApplication) {
@@ -123,6 +152,14 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
     }
 
     // profileStep === "review": final approve & apply
+    if (jobRequirements.length > 0 && !attested) {
+      setMessage("Check the box confirming your selections are truthful before applying.");
+      return;
+    }
+    if (containsContactInfo(requirementsContext)) {
+      setMessage(CONTACT_INFO_MESSAGE);
+      return;
+    }
     setBusy(true);
     setMessage("");
     const supabase = createSupabaseBrowserClient();
@@ -174,6 +211,11 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
       job_id: jobId,
       candidate_id: userData.user.id,
       profile_id: profile.id,
+      ...(jobRequirements.length > 0 ? {
+        requirement_matches: Array.from(checkedRequirements),
+        requirement_notes: requirementsContext.trim() || null,
+        requirements_attested_at: new Date().toISOString(),
+      } : {}),
     }).select("id").single();
 
     setMessage(applicationError ? applicationError.message : "Application sent. The employer can now review your profile.");
@@ -234,6 +276,22 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory }: ApplyFormPro
           <p className="text-xs leading-5 text-white/60">AI-assisted draft. Only the details you provided are included. Nothing is visible to employers until you approve it.</p>
           <label className="flex gap-3 text-xs leading-5 text-white/70"><input required type="checkbox" checked={approved} onChange={(event) => setApproved(event.target.checked)} className="mt-1 h-4 w-4 accent-[var(--yellow)]" /> I approve this profile for employers to review.</label>
           <button type="button" onClick={backToForm} className="text-xs font-bold text-white/70 underline underline-offset-4">Edit details</button>
+        </div>
+      )}
+
+      {jobRequirements.length > 0 && (selectedProfileId !== "new" || isNewProfileReview) && (
+        <div className="space-y-3 rounded-lg border border-white/30 bg-white/5 p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-white/60">Which of these do you meet?</p>
+          <div className="space-y-2">
+            {jobRequirements.map((item) => (
+              <label key={item} className="flex items-center gap-3 text-sm leading-5 text-white/90">
+                <input type="checkbox" checked={checkedRequirements.has(item)} onChange={() => toggleRequirement(item)} className="h-4 w-4 accent-[var(--yellow)]" />
+                {item}
+              </label>
+            ))}
+          </div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Additional context <span className="normal-case font-normal text-white/40">(optional)</span><textarea value={requirementsContext} onChange={(event) => setRequirementsContext(event.target.value)} rows={2} placeholder="Anything else worth mentioning about the checklist above" className="mt-2 w-full resize-none rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal normal-case tracking-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--yellow)]" /></label>
+          <label className="flex gap-3 text-xs leading-5 text-white/70"><input required type="checkbox" checked={attested} onChange={(event) => setAttested(event.target.checked)} className="mt-1 h-4 w-4 accent-[var(--yellow)]" /> My selections above are truthful to the best of my knowledge.</label>
         </div>
       )}
 

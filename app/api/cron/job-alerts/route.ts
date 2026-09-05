@@ -40,6 +40,7 @@ export async function GET(request: Request) {
     status: "published" as const,
     address: null,
     urgent: false,
+    requirements: [],
   }));
 
   let sent = 0;

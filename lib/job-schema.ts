@@ -43,6 +43,7 @@ export function buildJobPostingSchema(job: Job, canonicalUrl: string) {
       },
     },
     ...(baseSalary ? { baseSalary } : {}),
+    ...(job.requirements.length > 0 ? { qualifications: job.requirements.join("; ") } : {}),
     directApply: true,
     url: canonicalUrl,
   };

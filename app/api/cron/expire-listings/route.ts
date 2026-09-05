@@ -43,6 +43,7 @@ export async function GET(request: Request) {
       status: "published" as const,
       address: null,
       urgent: false,
+      requirements: [],
     };
     jobsByEmployer.set(row.employer_id, [...(jobsByEmployer.get(row.employer_id) ?? []), job]);
   }

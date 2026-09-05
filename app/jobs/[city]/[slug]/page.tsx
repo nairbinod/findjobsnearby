@@ -128,6 +128,15 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
               <p className="mt-4 max-w-[650px] text-base leading-8 text-[var(--muted)]">{job.description}</p>
               <p className="mt-5 max-w-[650px] text-base leading-8 text-[var(--muted)]">This is a local opportunity from a small business in {job.city}, {job.state}. Apply with a focused profile and hear directly from the employer.</p>
             </div>
+            {job.requirements.length > 0 && (
+              <div className="mt-8 max-w-[650px] rounded-2xl border border-[var(--line)] bg-white p-6">
+                <h2 className="text-lg font-bold">Requirements</h2>
+                <p className="mt-1 text-xs text-[var(--muted)]">Self-assess before applying — you&apos;ll check off which of these you meet.</p>
+                <ul className="mt-4 space-y-2 text-sm leading-6 text-[var(--muted)]">
+                  {job.requirements.map((item) => <li key={item} className="flex gap-2"><span aria-hidden="true">☐</span>{item}</li>)}
+                </ul>
+              </div>
+            )}
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a href={`/api/jobs/${job.id}/share-card`} className="text-xs font-semibold text-[var(--muted)] underline decoration-dotted underline-offset-4 hover:text-[var(--ink)]">Download shareable image ↓</a>
               {!isDemoJob && <ReportButton targetType="job" targetId={job.id} />}
@@ -146,7 +155,7 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
                 <p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--yellow)]">Ready to apply?</p>
                 <h2 className="display mt-5 text-3xl font-bold">Keep it simple.</h2>
                 <p className="mt-3 text-sm leading-6 text-white/70">Create a role-specific profile and apply for free.</p>
-                <ApplyForm jobId={job.id} jobTitle={job.title} jobCategory={job.category} />
+                <ApplyForm jobId={job.id} jobTitle={job.title} jobCategory={job.category} jobRequirements={job.requirements} />
                 <p className="mt-4 text-center text-xs text-white/50">No application fees</p>
               </>
             )}

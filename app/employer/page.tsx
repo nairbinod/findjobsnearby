@@ -9,11 +9,11 @@ import MessageThread from "@/components/MessageThread";
 import AuthNav from "@/components/AuthNav";
 import { unwrapEmbed } from "@/lib/postgrest";
 
-type EmployerJob = { id: string; title: string; company_name: string; city: string; state: string; pay_range: string; status: string; created_at: string; expires_at: string | null; urgent: boolean };
+type EmployerJob = { id: string; title: string; company_name: string; city: string; state: string; pay_range: string; status: string; created_at: string; expires_at: string | null; urgent: boolean; requirements: string[] | null };
 type CandidateProfile = { id: string; role_title: string; category: string | null; availability: string | null; available_from: string | null; available_until: string | null; curated_content: string | null };
 // PostgREST returns this embed as a single object, not a one-item array --
 // keep the raw union here and unwrap with unwrapEmbed at the point of use.
-type Applicant = { id: string; created_at: string; candidate_id: string; withdrawn_at: string | null; candidate_profiles: CandidateProfile | CandidateProfile[] | null };
+type Applicant = { id: string; created_at: string; candidate_id: string; withdrawn_at: string | null; requirement_matches: string[] | null; requirement_notes: string | null; candidate_profiles: CandidateProfile | CandidateProfile[] | null };
 type UnlockedDetails = { workHistory: string | null; desiredPay: string | null; email: string | null; phone: string | null };
 
 const jobCategories = ["Food & hospitality", "Skilled trades", "Care & education", "Operations"] as const;
@@ -58,7 +58,7 @@ export default function EmployerPage() {
     setCategoryFilter("All");
     setAvailabilityFilter("");
     const supabase = createSupabaseBrowserClient();
-    const { data, error } = await supabase.from("applications").select("id, created_at, candidate_id, withdrawn_at, candidate_profiles(id, role_title, category, availability, available_from, available_until, curated_content)").eq("job_id", jobId).order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("applications").select("id, created_at, candidate_id, withdrawn_at, requirement_matches, requirement_notes, candidate_profiles(id, role_title, category, availability, available_from, available_until, curated_content)").eq("job_id", jobId).order("created_at", { ascending: false });
     if (error) { setMessage(error.message); return; }
     const rows = (data as unknown as Applicant[]) ?? [];
     setApplicants(rows);
@@ -123,7 +123,7 @@ export default function EmployerPage() {
       if (!userData.user) { setMessage("Sign in with your employer account to manage jobs."); return; }
       setEmployerId(userData.user.id);
       const [{ data, error }, { data: unlocks }, { data: account }] = await Promise.all([
-        supabase.from("jobs").select("id, title, company_name, city, state, pay_range, status, created_at, expires_at, urgent").eq("employer_id", userData.user.id).order("created_at", { ascending: false }),
+        supabase.from("jobs").select("id, title, company_name, city, state, pay_range, status, created_at, expires_at, urgent, requirements").eq("employer_id", userData.user.id).order("created_at", { ascending: false }),
         supabase.from("paid_profile_views").select("candidate_id").eq("employer_id", userData.user.id),
         supabase.from("accounts").select("free_views_used").eq("id", userData.user.id).maybeSingle(),
       ]);
@@ -239,6 +239,19 @@ export default function EmployerPage() {
                                 </div>
                                 <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">{profile?.curated_content ?? "Candidate profile pending approval."}</p>
                                 <p className="mt-3 text-xs text-[var(--muted)]">Applied {new Date(applicant.created_at).toLocaleDateString()}{isWithdrawn && ` · Withdrawn ${new Date(applicant.withdrawn_at!).toLocaleDateString()}`}</p>
+
+                                {/* US-61: informational only -- never used to sort, rank,
+                                    filter, or hide applicants. Self-reported by the
+                                    candidate, not independently verified. */}
+                                {job.requirements && job.requirements.length > 0 && (
+                                  <div className="mt-3 rounded-lg bg-white p-3 text-xs">
+                                    <p className="font-bold text-[var(--ink)]">{applicant.requirement_matches?.length ?? 0} of {job.requirements.length} requirements met</p>
+                                    <ul className="mt-1.5 space-y-1 text-[var(--muted)]">
+                                      {job.requirements.map((item) => <li key={item}>{applicant.requirement_matches?.includes(item) ? "☑" : "☐"} {item}</li>)}
+                                    </ul>
+                                    {applicant.requirement_notes && <p className="mt-2 border-t border-[var(--line)] pt-2 leading-5 text-[var(--muted)]">&ldquo;{applicant.requirement_notes}&rdquo;</p>}
+                                  </div>
+                                )}
 
                                 {isUnlocked ? (
                                   <div className="mt-4 space-y-2 rounded-lg bg-white p-3 text-sm">

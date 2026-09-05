@@ -15,6 +15,7 @@ export type Job = {
   status: "published" | "closed" | "expired";
   address: string | null;
   urgent: boolean;
+  requirements: string[];
 };
 
 function expiresIn30Days(postedAt: string) {
@@ -37,6 +38,7 @@ const demoJobsRaw = [
     responsibilities: ["Prepare ingredients for service", "Work the line during rushes", "Keep the kitchen organized and stocked"],
     address: "412 Magnolia Ave, Fort Worth, TX 76104",
     urgent: true,
+    requirements: ["Reliable transportation", "Available weekends", "1+ year kitchen experience"],
   },
   {
     id: "demo-north-star-electrician",
@@ -53,6 +55,7 @@ const demoJobsRaw = [
     responsibilities: ["Install residential electrical systems", "Diagnose and repair electrical issues", "Follow safety and code requirements"],
     address: null,
     urgent: false,
+    requirements: [],
   },
   {
     id: "demo-patel-caregiver",
@@ -69,6 +72,7 @@ const demoJobsRaw = [
     responsibilities: ["Pick up two children from school", "Help with homework", "Prepare a simple afternoon snack"],
     address: null,
     urgent: false,
+    requirements: [],
   },
   {
     id: "demo-lone-star-warehouse",
@@ -85,6 +89,7 @@ const demoJobsRaw = [
     responsibilities: ["Receive and log incoming deliveries", "Pick and pack orders accurately", "Keep inventory counts up to date"],
     address: null,
     urgent: false,
+    requirements: [],
   },
 ];
 
