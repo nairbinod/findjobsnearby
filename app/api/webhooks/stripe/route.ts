@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getStripeClient } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { notifyProfileViewed } from "@/lib/notify";
@@ -16,7 +17,10 @@ export async function POST(request: Request) {
   let event;
   try {
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-  } catch {
+  } catch (error) {
+    // A wrong/rotated STRIPE_WEBHOOK_SECRET would fail every single delivery
+    // here -- silently, since Stripe just sees a 400 and retries. Report it.
+    Sentry.captureException(error);
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
@@ -42,6 +46,14 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (view) void notifyProfileViewed(view.id);
+    } else {
+      // A completed checkout with no employer/candidate metadata means
+      // someone paid and never got their unlock -- this should never happen,
+      // so treat it as an incident rather than letting it pass unnoticed.
+      Sentry.captureMessage("Stripe checkout completed without employer/candidate metadata", {
+        level: "error",
+        extra: { sessionId: (session as { id?: string }).id },
+      });
     }
   }
 

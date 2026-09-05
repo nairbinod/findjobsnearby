@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { notifyNewMessage } from "@/lib/notify";
 
@@ -19,9 +20,11 @@ export async function POST(request: Request) {
 
   try {
     await notifyNewMessage(messageId);
-  } catch {
+  } catch (error) {
     // Notification failures shouldn't surface to the sender -- the message
-    // itself already sent before this was called.
+    // itself already sent before this was called. Still report it, otherwise
+    // a broken notification path fails silently forever.
+    Sentry.captureException(error, { extra: { messageId } });
   }
 
   return NextResponse.json({ ok: true });
