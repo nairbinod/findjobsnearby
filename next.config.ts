@@ -5,7 +5,12 @@ const nextConfig: NextConfig = {
   /* config options here */
 };
 
-// No org/project/authToken set -- source maps won't upload, so stack traces
-// in Sentry show minified code for now. Revisit once there's a Sentry auth
-// token to enable that (needs org + project slugs from the Sentry dashboard).
-export default withSentryConfig(nextConfig, { silent: !process.env.CI });
+// authToken comes from SENTRY_AUTH_TOKEN (a secret -- never hardcode it here).
+// Without it, source-map upload silently no-ops and Sentry just shows
+// minified stack traces, so this stays safe to deploy before that's set.
+export default withSentryConfig(nextConfig, {
+  org: "nearby-je",
+  project: "findjobsnearby",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+});
