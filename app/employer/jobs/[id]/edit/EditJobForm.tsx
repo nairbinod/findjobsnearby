@@ -41,6 +41,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
   const [category, setCategory] = useState<string>(job.category ?? jobCategories[0]);
   const [responsibilities, setResponsibilities] = useState(job.responsibilities.join("\n"));
   const [requirements, setRequirements] = useState((job.requirements ?? []).join("\n"));
+  const [requirementQuestions, setRequirementQuestions] = useState<string[]>(job.requirements ?? []);
 
   const [draft, setDraft] = useState(false);
   const [drafting, setDrafting] = useState(false);
@@ -66,18 +67,21 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
       return;
     }
 
+    const requirementList = requirements.split("\n").map((item) => item.trim()).filter(Boolean);
+
     setDrafting(true);
     setMessage("");
     try {
       const response = await fetch("/api/draft-listing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, companyName, city: location, state: "TX", employmentType: type, payRange: pay, responsibilities: responsibilityList }),
+        body: JSON.stringify({ title, companyName, city: location, state: "TX", employmentType: type, payRange: pay, responsibilities: responsibilityList, requirements: requirementList }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "Could not draft the update.");
       setAiDescription(result.description);
       setFlags(result.flags ?? []);
+      setRequirementQuestions(result.requirementQuestions?.length ? result.requirementQuestions : requirementList);
       setDraft(true);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not draft the update.");
@@ -90,7 +94,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
     setSaving(true);
     setMessage("");
     const responsibilityList = responsibilities.split("\n").map((item) => item.trim()).filter(Boolean);
-    const requirementList = requirements.split("\n").map((item) => item.trim()).filter(Boolean);
+    const finalRequirements = requirementQuestions.map((item) => item.trim()).filter(Boolean);
     const supabase = createSupabaseBrowserClient();
     const { data, error } = await supabase.from("jobs").update({
       title,
@@ -102,7 +106,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
       employment_type: type,
       category,
       responsibilities: responsibilityList,
-      requirements: requirementList.length > 0 ? requirementList : null,
+      requirements: finalRequirements.length > 0 ? finalRequirements : null,
       description: aiDescription,
       updated_at: new Date().toISOString(),
     }).eq("id", job.id).select("id");
@@ -175,7 +179,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
                 <p className="mt-1 font-bold text-[var(--coral)]">{pay}</p>
                 {flags.length > 0 && <div className="mt-6 rounded-xl border border-[var(--coral)] bg-white/70 p-4"><p className="text-xs font-bold uppercase tracking-wider text-[var(--coral)]">Review before saving</p><p className="mt-2 text-sm leading-6">Wording that may be exclusionary or legally risky: {flags.map((flag) => `"${flag}"`).join(", ")}.</p></div>}
                 <div className="mt-8 border-t border-[var(--ink)]/15 pt-5"><p className="text-sm leading-7">{aiDescription}</p></div>
-                {requirements.split("\n").map((item) => item.trim()).filter(Boolean).length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Requirements</p><div className="mt-2 space-y-1 text-sm leading-7 text-[var(--ink)]/70">{requirements.split("\n").map((item) => item.trim()).filter(Boolean).map((item) => <span className="block" key={item}>☐ {item}</span>)}</div></div>}
+                {requirementQuestions.length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Requirements</p><p className="mt-1 text-xs text-[var(--ink)]/60">AI rephrased these as questions candidates check off. Edit any of them before saving.</p><div className="mt-3 space-y-2">{requirementQuestions.map((item, index) => <input key={index} value={item} onChange={(event) => setRequirementQuestions((current) => current.map((q, i) => (i === index ? event.target.value : q)))} className="w-full rounded-lg border border-[var(--ink)]/15 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--coral)]" />)}</div></div>}
                 <button onClick={() => void saveChanges()} disabled={saving} className="mt-8 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white disabled:opacity-60">{saving ? "Saving..." : "Save changes"} <span aria-hidden="true">↗</span></button>
                 <button type="button" onClick={() => setDraft(false)} className="mt-3 w-full text-center text-xs font-bold text-[var(--ink)]/70 underline underline-offset-4">Edit details again</button>
                 {message && <p role="status" className="mt-4 text-sm leading-5 text-[var(--muted)]">{message}</p>}

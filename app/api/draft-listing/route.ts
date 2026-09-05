@@ -12,7 +12,8 @@ function isValidInput(body: unknown): body is JobDraftInput {
     typeof input.employmentType === "string" &&
     typeof input.payRange === "string" && input.payRange.trim().length > 0 &&
     Array.isArray(input.responsibilities) && input.responsibilities.every((item) => typeof item === "string") &&
-    input.responsibilities.length >= 3 && input.responsibilities.length <= 5
+    input.responsibilities.length >= 3 && input.responsibilities.length <= 5 &&
+    (input.requirements === undefined || (Array.isArray(input.requirements) && input.requirements.every((item) => typeof item === "string") && input.requirements.length <= 6))
   );
 }
 
