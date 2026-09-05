@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { DM_Sans, Fraunces } from "next/font/google";
 import { buildNumber, lastUpdated } from "@/lib/build-info";
 import ReferralCapture from "@/components/ReferralCapture";
@@ -65,11 +66,44 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         ]).replace(/</g, "\\u003c") }} />
         <ReferralCapture />
         {children}
-        <footer className="border-t border-[var(--line)] bg-[var(--cream)] px-6 py-4 text-center text-xs text-[var(--muted)]">
-          <div className="mb-2 flex flex-wrap justify-center gap-4 font-semibold">
-            <a href="/about">About</a><a href="/employers">For employers</a><a href="/plans">Plans</a><a href="/faq">FAQ</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a>
+        <footer className="border-t border-[var(--line)] bg-[var(--cream)]">
+          <div className="mx-auto grid max-w-[1100px] gap-10 px-6 py-12 sm:grid-cols-3 lg:px-10">
+            <div>
+              <h2 className="text-sm font-bold text-[var(--ink)]">Job Seekers</h2>
+              <ul className="mt-4 space-y-3 text-sm text-[var(--muted)]">
+                <li><Link href="/jobs" className="hover:text-[var(--ink)]">Browse Jobs</Link></li>
+                <li><Link href="/account" className="hover:text-[var(--ink)]">My Applications</Link></li>
+                <li><Link href="/faq" className="hover:text-[var(--ink)]">FAQ</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-[var(--ink)]">Employers</h2>
+              <ul className="mt-4 space-y-3 text-sm text-[var(--muted)]">
+                <li><Link href="/post" className="hover:text-[var(--ink)]">Post a Job</Link></li>
+                <li><Link href="/employers" className="hover:text-[var(--ink)]">How Hiring Works</Link></li>
+                <li><Link href="/plans" className="hover:text-[var(--ink)]">Pricing</Link></li>
+                <li><Link href="/employer" className="hover:text-[var(--ink)]">Employer Dashboard</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-[var(--ink)]">About</h2>
+              <ul className="mt-4 space-y-3 text-sm text-[var(--muted)]">
+                <li><Link href="/about" className="hover:text-[var(--ink)]">About FindJobsNearBy</Link></li>
+                <li><a href="mailto:support@findjobsnearby.com" className="hover:text-[var(--ink)]">Contact Us</a></li>
+              </ul>
+            </div>
           </div>
-          FindJobsNearBy · Build {buildNumber} · Last updated {lastUpdated}
+          <div className="border-t border-[var(--line)]">
+            <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-[var(--muted)] lg:px-10">
+              <span>FindJobsNearBy · Build {buildNumber} · Last updated {lastUpdated}</span>
+              <div className="flex flex-wrap gap-4 font-semibold">
+                <Link href="/terms" className="hover:text-[var(--ink)]">Terms</Link>
+                <Link href="/privacy" className="hover:text-[var(--ink)]">Privacy</Link>
+                <Link href="/cookies" className="hover:text-[var(--ink)]">Cookies</Link>
+                <Link href="/refunds" className="hover:text-[var(--ink)]">Refunds</Link>
+              </div>
+            </div>
+          </div>
         </footer>
       </body>
     </html>
