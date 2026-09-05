@@ -6,6 +6,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import ReferralCard from "@/components/ReferralCard";
 import MessageThread from "@/components/MessageThread";
 import AuthNav from "@/components/AuthNav";
+import { unwrapEmbed } from "@/lib/postgrest";
 
 type Application = {
   id: string;
@@ -53,8 +54,11 @@ export default function AccountPage() {
       supabase.from("accounts").select("referral_code").eq("id", userData.user.id).maybeSingle(),
     ]);
     if (applicationError || profileError) setMessage(applicationError?.message ?? profileError?.message ?? "We could not load your account.");
-    const rawApplications = (applicationData ?? []) as unknown as Array<Application & { jobs: Application["jobs"][]; candidate_profiles: Application["candidate_profiles"][] }>;
-    setApplications(rawApplications.map((application) => ({ ...application, jobs: application.jobs[0] ?? null, candidate_profiles: application.candidate_profiles[0] ?? null })));
+    // PostgREST returns each of these as a single object, not a one-item
+    // array, so the raw shape from Supabase doesn't match Application's
+    // fields directly -- normalize with unwrapEmbed rather than assuming [0].
+    const rawApplications = (applicationData ?? []) as unknown as Array<Omit<Application, "jobs" | "candidate_profiles"> & { jobs: Application["jobs"] | Application["jobs"][]; candidate_profiles: Application["candidate_profiles"] | Application["candidate_profiles"][] }>;
+    setApplications(rawApplications.map((application) => ({ ...application, jobs: unwrapEmbed(application.jobs), candidate_profiles: unwrapEmbed(application.candidate_profiles) })));
     setViewedByEmployerIds(new Set((viewData ?? []).map((view) => view.employer_id)));
     setProfiles(profileData ?? []);
     setReferralCode(accountData?.referral_code ?? "");

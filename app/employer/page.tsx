@@ -7,9 +7,13 @@ import { buildJobHref } from "@/lib/geo";
 import ReportButton from "@/components/ReportButton";
 import MessageThread from "@/components/MessageThread";
 import AuthNav from "@/components/AuthNav";
+import { unwrapEmbed } from "@/lib/postgrest";
 
 type EmployerJob = { id: string; title: string; company_name: string; city: string; state: string; pay_range: string; status: string; created_at: string; expires_at: string | null; urgent: boolean };
-type Applicant = { id: string; created_at: string; candidate_id: string; withdrawn_at: string | null; candidate_profiles: { id: string; role_title: string; category: string | null; availability: string | null; available_from: string | null; available_until: string | null; curated_content: string | null }[] };
+type CandidateProfile = { id: string; role_title: string; category: string | null; availability: string | null; available_from: string | null; available_until: string | null; curated_content: string | null };
+// PostgREST returns this embed as a single object, not a one-item array --
+// keep the raw union here and unwrap with unwrapEmbed at the point of use.
+type Applicant = { id: string; created_at: string; candidate_id: string; withdrawn_at: string | null; candidate_profiles: CandidateProfile | CandidateProfile[] | null };
 type UnlockedDetails = { workHistory: string | null; desiredPay: string | null; email: string | null; phone: string | null };
 
 const jobCategories = ["Food & hospitality", "Skilled trades", "Care & education", "Operations"] as const;
@@ -160,7 +164,7 @@ export default function EmployerPage() {
   }, []);
 
   const visibleApplicants = useMemo(() => applicants.filter((applicant) => {
-    const profile = applicant.candidate_profiles?.[0];
+    const profile = unwrapEmbed(applicant.candidate_profiles);
     const matchesCategory = categoryFilter === "All" || profile?.category === categoryFilter;
     const matchesAvailability = !availabilityFilter || (profile?.availability ?? "").toLowerCase().includes(availabilityFilter.toLowerCase());
     return matchesCategory && matchesAvailability;
@@ -219,7 +223,7 @@ export default function EmployerPage() {
                       ) : (
                         <div className="mt-4 grid gap-3 md:grid-cols-2">
                           {visibleApplicants.map((applicant) => {
-                            const profile = applicant.candidate_profiles?.[0];
+                            const profile = unwrapEmbed(applicant.candidate_profiles);
                             const isUnlocked = unlockedCandidateIds.has(applicant.candidate_id);
                             const details = unlockedDetails[applicant.candidate_id];
                             const isWithdrawn = Boolean(applicant.withdrawn_at);
