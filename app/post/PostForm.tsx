@@ -31,6 +31,11 @@ export default function PostForm() {
   const [responsibilities, setResponsibilities] = useState("");
   const [requirements, setRequirements] = useState("");
   const [requirementQuestions, setRequirementQuestions] = useState<string[]>([]);
+  // US-63: AI-suggested "preferred" items -- generic for this role type, not
+  // grounded in what the employer wrote, so they must default unchecked and
+  // require individual opt-in. Never merged into requirementQuestions directly.
+  const [suggestedPreferred, setSuggestedPreferred] = useState<string[]>([]);
+  const [selectedPreferred, setSelectedPreferred] = useState<Set<string>>(new Set());
   const [publishMessage, setPublishMessage] = useState("");
   const [publishing, setPublishing] = useState(false);
   const [drafting, setDrafting] = useState(false);
@@ -70,7 +75,14 @@ export default function PostForm() {
       setFlags(result.flags ?? []);
       // AI rephrases each requirement as a question, but the employer still
       // reviews and can edit every one before it saves (§5 human-approval).
-      setRequirementQuestions(result.requirementQuestions?.length ? result.requirementQuestions : requirementList);
+      // US-62: must-haves extracted from the employer's own responsibilities/
+      // description text are folded in here too, checked by default since
+      // they're the employer's own words -- same editable treatment as the
+      // manually-typed ones, not a separate confirmation step.
+      const baseRequirements = result.requirementQuestions?.length ? result.requirementQuestions : requirementList;
+      setRequirementQuestions([...baseRequirements, ...(result.extractedMustHaves ?? [])]);
+      setSuggestedPreferred(result.suggestedPreferred ?? []);
+      setSelectedPreferred(new Set());
       setDraft(true);
       setPublished(false);
     } catch (error) {
@@ -88,6 +100,8 @@ export default function PostForm() {
     setResponsibilities("");
     setRequirements("");
     setRequirementQuestions([]);
+    setSuggestedPreferred([]);
+    setSelectedPreferred(new Set());
     setAiDescription("");
     setFlags([]);
     setDraft(false);
@@ -112,9 +126,9 @@ export default function PostForm() {
       setPublishing(false);
       return;
     }
-    const finalRequirements = requirementQuestions.map((item) => item.trim()).filter(Boolean);
+    const finalRequirements = [...requirementQuestions.map((item) => item.trim()).filter(Boolean), ...selectedPreferred];
     if (finalRequirements.length > 6) {
-      setPublishMessage("Add up to 6 requirements, with one requirement on each line.");
+      setPublishMessage("You have more than 6 requirements total — remove some or uncheck a suggested one.");
       setPublishing(false);
       return;
     }
@@ -179,7 +193,8 @@ export default function PostForm() {
           </form>
           <aside className="rounded-2xl border border-[var(--line)] bg-[var(--mint)] p-6 sm:p-8">
             <div className="flex items-center justify-between"><p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--coral)]">{published ? "Published" : draft ? "Review before publishing" : "Your listing preview"}</p><span className="text-xl">✳</span></div>
-            {published ? <div className="mt-10 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--yellow)] text-2xl">✓</div><h2 className="display mt-6 text-3xl font-bold">You&apos;re live.</h2><p className="mt-3 text-sm leading-6 text-[var(--muted)]">Your listing is ready for local job seekers to discover.</p><button onClick={addAnotherRole} className="mt-7 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white">Add another role <span aria-hidden="true">+</span></button><p className="mt-3 text-xs text-[var(--muted)]">Hiring for more than one position? Post each role separately — free every time.</p></div> : draft ? <div className="mt-10">{urgent && <span className="mb-3 inline-block rounded-full bg-[var(--coral)] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}<h2 className="display text-4xl font-bold">{title}</h2><p className="mt-2 font-semibold">{companyName} · {address ? `${address}, ${location}` : location} · {type.replace("_", "-")}</p><p className="mt-1 font-bold text-[var(--coral)]">{pay}</p>{flags.length > 0 && <div className="mt-6 rounded-xl border border-[var(--coral)] bg-white/70 p-4"><p className="text-xs font-bold uppercase tracking-wider text-[var(--coral)]">Review before publishing</p><p className="mt-2 text-sm leading-6">Your listing includes wording that may be exclusionary or legally risky: {flags.map((flag) => `"${flag}"`).join(", ")}. Edit it above if you&apos;d like, then draft again.</p></div>}<div className="mt-8 border-t border-[var(--ink)]/15 pt-5"><p className="text-sm leading-7">{aiDescription}</p></div><div className="mt-6 space-y-1 text-sm leading-7 text-[var(--ink)]/70">{responsibilities.split("\n").filter(Boolean).map((item) => <span className="block" key={item}>• {item}</span>)}</div>{requirementQuestions.length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Requirements</p><p className="mt-1 text-xs text-[var(--ink)]/60">AI rephrased these as questions candidates check off. Edit any of them before publishing.</p><div className="mt-3 space-y-2">{requirementQuestions.map((item, index) => <input key={index} value={item} onChange={(event) => setRequirementQuestions((current) => current.map((q, i) => (i === index ? event.target.value : q)))} className="w-full rounded-lg border border-[var(--ink)]/15 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--coral)]" />)}</div></div>}<p className="mt-8 text-xs leading-5 text-[var(--muted)]">AI-assisted draft. Only the details you provided are included. Nothing publishes until you approve it.</p><button onClick={publishJob} disabled={publishing} className="mt-6 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white disabled:opacity-60">{publishing ? "Publishing..." : "Approve & publish"} <span aria-hidden="true">↗</span></button>{publishMessage && <p role="status" className="mt-4 text-sm leading-5 text-[var(--muted)]">{publishMessage}</p>}</div> : <div className="mt-12"><div className="h-4 w-24 rounded bg-white/70" /><div className="mt-5 h-10 w-4/5 rounded bg-white/70" /><div className="mt-3 h-4 w-2/5 rounded bg-white/70" /><div className="mt-10 space-y-3 border-t border-[var(--ink)]/10 pt-6"><div className="h-3 w-full rounded bg-white/60" /><div className="h-3 w-11/12 rounded bg-white/60" /><div className="h-3 w-4/5 rounded bg-white/60" /></div><p className="mt-12 text-sm leading-6 text-[var(--muted)]">Your approved listing will be clear, grounded in your words, and ready to share with nearby candidates.</p></div>}
+            {published ? <div className="mt-10 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--yellow)] text-2xl">✓</div><h2 className="display mt-6 text-3xl font-bold">You&apos;re live.</h2><p className="mt-3 text-sm leading-6 text-[var(--muted)]">Your listing is ready for local job seekers to discover.</p><button onClick={addAnotherRole} className="mt-7 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white">Add another role <span aria-hidden="true">+</span></button><p className="mt-3 text-xs text-[var(--muted)]">Hiring for more than one position? Post each role separately — free every time.</p></div> : draft ? <div className="mt-10">{urgent && <span className="mb-3 inline-block rounded-full bg-[var(--coral)] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}<h2 className="display text-4xl font-bold">{title}</h2><p className="mt-2 font-semibold">{companyName} · {address ? `${address}, ${location}` : location} · {type.replace("_", "-")}</p><p className="mt-1 font-bold text-[var(--coral)]">{pay}</p>{flags.length > 0 && <div className="mt-6 rounded-xl border border-[var(--coral)] bg-white/70 p-4"><p className="text-xs font-bold uppercase tracking-wider text-[var(--coral)]">Review before publishing</p><p className="mt-2 text-sm leading-6">Your listing includes wording that may be exclusionary or legally risky: {flags.map((flag) => `"${flag}"`).join(", ")}. Edit it above if you&apos;d like, then draft again.</p></div>}<div className="mt-8 border-t border-[var(--ink)]/15 pt-5"><p className="text-sm leading-7">{aiDescription}</p></div><div className="mt-6 space-y-1 text-sm leading-7 text-[var(--ink)]/70">{responsibilities.split("\n").filter(Boolean).map((item) => <span className="block" key={item}>• {item}</span>)}</div>{requirementQuestions.length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Requirements</p><p className="mt-1 text-xs text-[var(--ink)]/60">AI rephrased these as questions candidates check off. Edit any of them before publishing.</p><div className="mt-3 space-y-2">{requirementQuestions.map((item, index) => <input key={index} value={item} onChange={(event) => setRequirementQuestions((current) => current.map((q, i) => (i === index ? event.target.value : q)))} className="w-full rounded-lg border border-[var(--ink)]/15 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--coral)]" />)}</div></div>}
+                {suggestedPreferred.length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Suggested by AI — not something you said</p><p className="mt-1 text-xs text-[var(--ink)]/60">Commonly requested for this type of role. Check any you&apos;d like to add — none are included unless you pick them.</p><div className="mt-3 space-y-2">{suggestedPreferred.map((item) => <label key={item} className="flex items-center gap-3 rounded-lg bg-white/70 px-3 py-2 text-sm"><input type="checkbox" checked={selectedPreferred.has(item)} onChange={() => setSelectedPreferred((current) => { const next = new Set(current); if (next.has(item)) next.delete(item); else next.add(item); return next; })} className="h-4 w-4 accent-[var(--coral)]" />{item}</label>)}</div></div>}<p className="mt-8 text-xs leading-5 text-[var(--muted)]">AI-assisted draft. Only the details you provided are included. Nothing publishes until you approve it.</p><button onClick={publishJob} disabled={publishing} className="mt-6 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white disabled:opacity-60">{publishing ? "Publishing..." : "Approve & publish"} <span aria-hidden="true">↗</span></button>{publishMessage && <p role="status" className="mt-4 text-sm leading-5 text-[var(--muted)]">{publishMessage}</p>}</div> : <div className="mt-12"><div className="h-4 w-24 rounded bg-white/70" /><div className="mt-5 h-10 w-4/5 rounded bg-white/70" /><div className="mt-3 h-4 w-2/5 rounded bg-white/70" /><div className="mt-10 space-y-3 border-t border-[var(--ink)]/10 pt-6"><div className="h-3 w-full rounded bg-white/60" /><div className="h-3 w-11/12 rounded bg-white/60" /><div className="h-3 w-4/5 rounded bg-white/60" /></div><p className="mt-12 text-sm leading-6 text-[var(--muted)]">Your approved listing will be clear, grounded in your words, and ready to share with nearby candidates.</p></div>}
           </aside>
         </div>
       </main>

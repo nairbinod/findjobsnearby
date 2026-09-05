@@ -42,6 +42,8 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
   const [responsibilities, setResponsibilities] = useState(job.responsibilities.join("\n"));
   const [requirements, setRequirements] = useState((job.requirements ?? []).join("\n"));
   const [requirementQuestions, setRequirementQuestions] = useState<string[]>(job.requirements ?? []);
+  const [suggestedPreferred, setSuggestedPreferred] = useState<string[]>([]);
+  const [selectedPreferred, setSelectedPreferred] = useState<Set<string>>(new Set());
 
   const [draft, setDraft] = useState(false);
   const [drafting, setDrafting] = useState(false);
@@ -81,7 +83,10 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
       if (!response.ok) throw new Error(result.error ?? "Could not draft the update.");
       setAiDescription(result.description);
       setFlags(result.flags ?? []);
-      setRequirementQuestions(result.requirementQuestions?.length ? result.requirementQuestions : requirementList);
+      const baseRequirements = result.requirementQuestions?.length ? result.requirementQuestions : requirementList;
+      setRequirementQuestions([...baseRequirements, ...(result.extractedMustHaves ?? [])]);
+      setSuggestedPreferred(result.suggestedPreferred ?? []);
+      setSelectedPreferred(new Set());
       setDraft(true);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not draft the update.");
@@ -94,7 +99,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
     setSaving(true);
     setMessage("");
     const responsibilityList = responsibilities.split("\n").map((item) => item.trim()).filter(Boolean);
-    const finalRequirements = requirementQuestions.map((item) => item.trim()).filter(Boolean);
+    const finalRequirements = [...requirementQuestions.map((item) => item.trim()).filter(Boolean), ...selectedPreferred];
     const supabase = createSupabaseBrowserClient();
     const { data, error } = await supabase.from("jobs").update({
       title,
@@ -180,6 +185,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
                 {flags.length > 0 && <div className="mt-6 rounded-xl border border-[var(--coral)] bg-white/70 p-4"><p className="text-xs font-bold uppercase tracking-wider text-[var(--coral)]">Review before saving</p><p className="mt-2 text-sm leading-6">Wording that may be exclusionary or legally risky: {flags.map((flag) => `"${flag}"`).join(", ")}.</p></div>}
                 <div className="mt-8 border-t border-[var(--ink)]/15 pt-5"><p className="text-sm leading-7">{aiDescription}</p></div>
                 {requirementQuestions.length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Requirements</p><p className="mt-1 text-xs text-[var(--ink)]/60">AI rephrased these as questions candidates check off. Edit any of them before saving.</p><div className="mt-3 space-y-2">{requirementQuestions.map((item, index) => <input key={index} value={item} onChange={(event) => setRequirementQuestions((current) => current.map((q, i) => (i === index ? event.target.value : q)))} className="w-full rounded-lg border border-[var(--ink)]/15 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--coral)]" />)}</div></div>}
+                {suggestedPreferred.length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Suggested by AI — not something you said</p><p className="mt-1 text-xs text-[var(--ink)]/60">Commonly requested for this type of role. Check any you&apos;d like to add — none are included unless you pick them.</p><div className="mt-3 space-y-2">{suggestedPreferred.map((item) => <label key={item} className="flex items-center gap-3 rounded-lg bg-white/70 px-3 py-2 text-sm"><input type="checkbox" checked={selectedPreferred.has(item)} onChange={() => setSelectedPreferred((current) => { const next = new Set(current); if (next.has(item)) next.delete(item); else next.add(item); return next; })} className="h-4 w-4 accent-[var(--coral)]" />{item}</label>)}</div></div>}
                 <button onClick={() => void saveChanges()} disabled={saving} className="mt-8 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white disabled:opacity-60">{saving ? "Saving..." : "Save changes"} <span aria-hidden="true">↗</span></button>
                 <button type="button" onClick={() => setDraft(false)} className="mt-3 w-full text-center text-xs font-bold text-[var(--ink)]/70 underline underline-offset-4">Edit details again</button>
                 {message && <p role="status" className="mt-4 text-sm leading-5 text-[var(--muted)]">{message}</p>}

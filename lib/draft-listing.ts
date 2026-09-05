@@ -15,6 +15,12 @@ const DraftSchema = z.object({
   requirementQuestions: z
     .array(z.string())
     .describe("Each item in the input requirements list rephrased as a short yes/no self-assessment question a candidate can check off (e.g. 'Reliable transportation' -> 'Do you have reliable transportation?'). Same order, same count as the input -- never add, drop, or merge items. Empty array if no requirements were provided."),
+  extractedMustHaves: z
+    .array(z.string())
+    .describe("Requirement-like statements found in the employer's OWN responsibilities/description text (e.g. 'must have a valid driver's license', 'requires ServSafe certification', physical demands, years of experience) that the employer did not separately list as a requirement, rephrased as yes/no questions. Only extract what is explicitly stated -- never infer or invent one. Empty array if none found."),
+  suggestedPreferred: z
+    .array(z.string())
+    .describe("2-4 commonly-requested preferred qualifications for this general type of role (based on the job title/category), phrased as yes/no questions. These are generic industry-standard suggestions, not facts about this specific job -- do not present them as something the employer stated. Empty array if the role is too generic/unclear to suggest anything specific."),
 });
 
 export type JobDraftInput = {
@@ -36,7 +42,11 @@ Rewrite only the details the employer explicitly provided into a short, clear jo
 
 Separately, scan the employer's title and responsibilities for legally risky or exclusionary phrasing: age-coded language (e.g. "young", "recent grad", "energetic" implying youth), gendered language (e.g. "he must", "waitress" where a neutral term exists), or other exclusionary phrasing. List the exact phrases found in "flags". Do not remove, soften, or fix them yourself -- only flag them so the employer can review and edit their own listing.
 
-If the employer provided a requirements list, rephrase each one as a short yes/no question a candidate can self-assess against (e.g. "2+ years experience" -> "Do you have 2+ years of experience?"). Keep the same order and the same number of items -- you are rephrasing, not adding, dropping, merging, or inventing requirements. If no requirements were provided, return an empty list.`;
+If the employer provided a requirements list, rephrase each one as a short yes/no question a candidate can self-assess against (e.g. "2+ years experience" -> "Do you have 2+ years of experience?"). Keep the same order and the same number of items -- you are rephrasing, not adding, dropping, merging, or inventing requirements. If no requirements were provided, return an empty list.
+
+Separately, re-read the employer's own responsibilities/description text for any requirement-like statement they buried in there instead of listing separately (a license, certification, physical requirement, years of experience, etc.). Pull out only what they explicitly wrote, rephrased as a yes/no question, into "extractedMustHaves" -- this must be traceable to their own words, never something you inferred is probably needed for this kind of job.
+
+Finally, based only on the job title and category, suggest 2-4 commonly-requested "preferred" qualifications for that general type of role into "suggestedPreferred", phrased as yes/no questions. Unlike everything else in this task, these are allowed to be generic industry knowledge rather than grounded in the employer's own words -- but they must never be phrased or treated as facts about this specific job, since the employer never stated them. If the role is too generic to suggest anything meaningful, return an empty list rather than guessing.`;
 
 /** US-3 / PRD §5: server-side only, source-grounded drafting with human
  * review still required before publish (enforced in the /post UI). */
