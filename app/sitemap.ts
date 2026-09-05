@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getAllJobs, jobHref } from "@/lib/jobs-data";
 import { TX_METROS, citySlug, categorySlug, CATEGORIES } from "@/lib/geo";
+import { blogPosts } from "@/lib/blog";
+import { guides } from "@/lib/guides";
 
 const STATIC_ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }[] = [
   { path: "", changeFrequency: "daily", priority: 1 },
@@ -11,6 +13,8 @@ const STATIC_ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[numb
   { path: "/employers", changeFrequency: "monthly", priority: 0.7 },
   { path: "/employer-interest", changeFrequency: "monthly", priority: 0.5 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/blog", changeFrequency: "weekly", priority: 0.6 },
+  { path: "/guides", changeFrequency: "monthly", priority: 0.6 },
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/cookies", changeFrequency: "yearly", priority: 0.3 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
@@ -51,5 +55,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticEntries, ...cityEntries, ...cityCategoryEntries, ...jobEntries];
+  const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => ({
+    url: `https://findjobsnearby.com/blog/${post.slug}`,
+    lastModified: new Date(post.publishedAt),
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
+
+  const guideEntries: MetadataRoute.Sitemap = guides.map((guide) => ({
+    url: `https://findjobsnearby.com/guides/${guide.slug}`,
+    lastModified: new Date(guide.publishedAt),
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
+
+  return [...staticEntries, ...cityEntries, ...cityCategoryEntries, ...jobEntries, ...blogEntries, ...guideEntries];
 }

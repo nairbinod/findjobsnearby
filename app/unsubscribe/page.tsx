@@ -12,23 +12,36 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
 
   if (token) {
     const admin = createSupabaseAdminClient();
-    const { data } = await admin
+    // Job alerts (US-52) and the newsletter (US-49) are separate subscriber
+    // lists with their own tokens -- try each rather than needing the link
+    // itself to say which one it's for.
+    const { data: jobAlert } = await admin
       .from("job_alert_subscribers")
       .update({ unsubscribed_at: new Date().toISOString() })
       .eq("unsubscribe_token", token)
       .select("id")
       .maybeSingle();
-    outcome = data ? "unsubscribed" : "not-found";
+    if (jobAlert) {
+      outcome = "unsubscribed";
+    } else {
+      const { data: newsletter } = await admin
+        .from("newsletter_subscribers")
+        .update({ unsubscribed_at: new Date().toISOString() })
+        .eq("unsubscribe_token", token)
+        .select("id")
+        .maybeSingle();
+      outcome = newsletter ? "unsubscribed" : "not-found";
+    }
   }
 
   return (
     <div className="min-h-screen bg-[var(--cream)]">
       <main className="mx-auto max-w-[600px] px-6 py-24 text-center">
-        <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Job alerts</p>
+        <p className="mb-4 text-xs font-bold uppercase tracking-[.2em] text-[var(--coral)]">Email preferences</p>
         {outcome === "unsubscribed" && (
           <>
             <h1 className="display text-4xl font-bold">You&apos;re unsubscribed.</h1>
-            <p className="mt-4 text-[var(--muted)]">You won&apos;t get any more job alert emails from FindJobsNearBy.</p>
+            <p className="mt-4 text-[var(--muted)]">You won&apos;t get any more emails from this list.</p>
           </>
         )}
         {outcome === "not-found" && (

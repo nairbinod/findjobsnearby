@@ -89,6 +89,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <h2 className="text-sm font-bold text-[var(--ink)]">About</h2>
               <ul className="mt-4 space-y-3 text-sm text-[var(--muted)]">
                 <li><Link href="/about" className="hover:text-[var(--ink)]">About FindJobsNearBy</Link></li>
+                <li><Link href="/blog" className="hover:text-[var(--ink)]">Blog</Link></li>
+                <li><Link href="/guides" className="hover:text-[var(--ink)]">Guides</Link></li>
                 <li><a href="mailto:support@findjobsnearby.com" className="hover:text-[var(--ink)]">Contact Us</a></li>
               </ul>
             </div>
