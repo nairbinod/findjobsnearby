@@ -37,6 +37,10 @@ export default function EmployerPage() {
   const [unlockedDetails, setUnlockedDetails] = useState<Record<string, UnlockedDetails>>({});
   const [unlockingCandidateId, setUnlockingCandidateId] = useState<string | null>(null);
   const [unlockMessage, setUnlockMessage] = useState("");
+  // Bumped on every applicants refetch and used as part of MessageThread's
+  // key -- it doesn't refetch on its own otherwise, since its own props
+  // (employerId/candidateId) never change between refreshes.
+  const [refreshToken, setRefreshToken] = useState(0);
 
   async function loadUnlockedDetails(candidateId: string) {
     const response = await fetch(`/api/candidates/${candidateId}/unlocked-profile`);
@@ -58,6 +62,7 @@ export default function EmployerPage() {
     for (const row of rows) {
       if (unlockedCandidateIds.has(row.candidate_id) && !unlockedDetails[row.candidate_id]) void loadUnlockedDetails(row.candidate_id);
     }
+    setRefreshToken((token) => token + 1);
   }
 
   async function unlockProfile(candidateId: string, applicationId: string) {
@@ -186,13 +191,19 @@ export default function EmployerPage() {
                       <p className="mt-1 text-sm text-[var(--muted)]">{job.company_name} · {job.city} · {job.pay_range}</p>
                       <div className="mt-3 flex flex-wrap items-center gap-3"><span className="text-xs font-semibold uppercase tracking-wider text-[var(--coral)]">{job.status}</span><span className="text-xs text-[var(--muted)]">{viewCounts[job.id] ?? 0} unique view{(viewCounts[job.id] ?? 0) === 1 ? "" : "s"}</span><span className="text-xs text-[var(--muted)]">· {applicationCounts[job.id] ?? 0} applicant{(applicationCounts[job.id] ?? 0) === 1 ? "" : "s"}</span></div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-4">{(applicationCounts[job.id] ?? 0) > 0 ? <button onClick={() => void showApplicants(job.id)} className="rounded-full bg-[var(--coral)] px-4 py-2 text-sm font-bold text-white">{selectedJob === job.id ? "Hide applicants" : `View ${applicationCounts[job.id]} applicant${applicationCounts[job.id] === 1 ? "" : "s"}`} <span aria-hidden="true">→</span></button> : <button onClick={() => void showApplicants(job.id)} className="text-sm font-bold text-[var(--ink)]">Applicants →</button>}<a href={buildJobHref(job.id, job.title, job.city, job.state)} className="text-sm font-bold text-[var(--coral)]">View listing →</a><a href={`/employer/jobs/${job.id}/edit`} className="text-sm font-bold text-[var(--ink)]">Edit →</a><a href={`/api/jobs/${job.id}/share-card`} className="text-sm font-bold text-[var(--muted)]">Download image ↓</a>{job.status === "published" && <button onClick={() => void closeJob(job.id)} className="text-sm font-bold text-[var(--muted)]">Close listing</button>}{job.status === "expired" && <button onClick={() => void renewJob(job.id)} className="text-sm font-bold text-[var(--coral)]">Renew for 30 more days →</button>}</div>
+                    <div className="flex flex-wrap items-center gap-4">{(applicationCounts[job.id] ?? 0) > 0 ? <button onClick={() => (selectedJob === job.id ? setSelectedJob(null) : void showApplicants(job.id))} className="rounded-full bg-[var(--coral)] px-4 py-2 text-sm font-bold text-white">{selectedJob === job.id ? "Hide applicants" : `View ${applicationCounts[job.id]} applicant${applicationCounts[job.id] === 1 ? "" : "s"}`} <span aria-hidden="true">→</span></button> : <button onClick={() => void showApplicants(job.id)} className="text-sm font-bold text-[var(--ink)]">Applicants →</button>}<a href={buildJobHref(job.id, job.title, job.city, job.state)} className="text-sm font-bold text-[var(--coral)]">View listing →</a><a href={`/employer/jobs/${job.id}/edit`} className="text-sm font-bold text-[var(--ink)]">Edit →</a><a href={`/api/jobs/${job.id}/share-card`} className="text-sm font-bold text-[var(--muted)]">Download image ↓</a>{job.status === "published" && <button onClick={() => void closeJob(job.id)} className="text-sm font-bold text-[var(--muted)]">Close listing</button>}{job.status === "expired" && <button onClick={() => void renewJob(job.id)} className="text-sm font-bold text-[var(--coral)]">Renew for 30 more days →</button>}</div>
                   </div>
                   {selectedJob === job.id && (
                     <div className="mt-5 border-t border-[var(--line)] pt-5">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <h4 className="font-bold">Applicants</h4>
-                        <span className="text-xs text-[var(--muted)]">{applicants.length}/30 applications</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-[var(--muted)]">{applicants.length}/30 applications</span>
+                          {/* This list only loads when opened -- a new applicant, an
+                              approved profile, or a reply won't show up here on their
+                              own, so a manual refresh is the only way to see them. */}
+                          <button onClick={() => void showApplicants(job.id)} className="text-xs font-bold text-[var(--coral)]">Refresh</button>
+                        </div>
                       </div>
                       {applicants.length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-3">
@@ -238,7 +249,7 @@ export default function EmployerPage() {
                                   </div>
                                 ) : null}
                                 {isUnlocked && employerId && (
-                                  <MessageThread employerId={employerId} candidateId={applicant.candidate_id} viewerId={employerId} counterpartLabel="candidate" />
+                                  <MessageThread key={`${applicant.candidate_id}-${refreshToken}`} employerId={employerId} candidateId={applicant.candidate_id} viewerId={employerId} counterpartLabel="candidate" />
                                 )}
                                 {!isUnlocked && (isWithdrawn ? (
                                   <p className="mt-4 text-xs text-[var(--muted)]">This candidate withdrew their application.</p>
