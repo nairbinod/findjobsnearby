@@ -60,6 +60,7 @@ export async function GET(request: Request) {
       address: null,
       urgent: false,
       requirements: [],
+      unclaimed: false,
     };
     jobsByCategory.set(row.category, [...(jobsByCategory.get(row.category) ?? []), job]);
   }

@@ -122,6 +122,26 @@ export async function notifySeasonReturn(candidateId: string, jobs: Job[]) {
   for (const job of unseen) await logNotification(admin, "season_return", candidateId, job.id);
 }
 
+/** US-64/65: invite a real business to claim a listing seeded on their
+ * behalf. Not deduplicated via notification_log -- there's no account yet
+ * to key off of, same reasoning as sendJobConfirmationEmail. */
+export async function sendClaimListingEmail(email: string, claimToken: string, jobTitle: string, companyName: string) {
+  const claimUrl = `${SITE_URL}/claim/${claimToken}`;
+
+  await getResendClient().emails.send({
+    from: NOTIFICATIONS_FROM,
+    to: email,
+    subject: `Is this your job listing, ${companyName}?`,
+    html: wrap(
+      "Claim your job listing on FindJobsNearBy",
+      `<h1 style="font-size:22px;color:#152d2a;margin:0 0 12px;">We found your posting.</h1>
+       <p style="font-size:15px;line-height:1.6;color:#152d2a;">We noticed ${companyName} is hiring for &ldquo;${jobTitle}&rdquo; and created a free listing on FindJobsNearBy so local candidates can find it. If this is your business, claim it in one click -- no signup form, no password.</p>
+       <a href="${claimUrl}" style="display:inline-block;margin-top:16px;background:#152d2a;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:700;font-size:14px;">Yes, this is my posting →</a>
+       <p style="margin-top:20px;font-size:12px;color:#64716d;">Not your business, or don't want it listed? Reply to this email and we'll take it down.</p>`,
+    ),
+  });
+}
+
 /** US-70: confirm-to-publish link for an employer who posted without an
  * account. Not deduplicated via notification_log like the others -- there's
  * no account yet to key off of, and re-submitting legitimately should

@@ -41,6 +41,7 @@ export async function GET(request: Request) {
     address: null,
     urgent: false,
     requirements: [],
+    unclaimed: false,
   }));
 
   let sent = 0;

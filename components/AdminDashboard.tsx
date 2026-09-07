@@ -78,7 +78,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[var(--cream)]">
       <header className="mx-auto flex max-w-[1100px] items-center justify-between px-6 py-6 lg:px-10">
         <Link href="/" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></Link>
-        <span className="rounded-full bg-[var(--ink)] px-4 py-2 text-xs font-bold uppercase text-white">Admin</span>
+        <div className="flex items-center gap-4"><Link href="/admin/seed" className="text-sm font-bold text-[var(--muted)]">Seed a listing <span aria-hidden="true">→</span></Link><span className="rounded-full bg-[var(--ink)] px-4 py-2 text-xs font-bold uppercase text-white">Admin</span></div>
       </header>
       <main className="mx-auto max-w-[1100px] px-6 pb-20 pt-6 lg:px-10">
         <h1 className="display text-4xl font-bold">Moderation dashboard</h1>

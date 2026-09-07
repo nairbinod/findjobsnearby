@@ -142,6 +142,10 @@ export default function EmployerPage() {
       if (new URLSearchParams(window.location.search).get("posted")) {
         setUnlockMessage("Your listing is confirmed and live. Welcome to your employer dashboard.");
       }
+      // US-65: landed here straight from claiming a seeded listing.
+      if (new URLSearchParams(window.location.search).get("claimed")) {
+        setUnlockMessage("You've claimed this listing. It's yours to manage from here.");
+      }
 
       const [viewCountEntries, applicationCountEntries] = await Promise.all([
         Promise.all((data ?? []).map(async (job) => {

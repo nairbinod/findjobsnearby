@@ -78,7 +78,8 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
             {jobs.map((job) => (
               <Link href={jobHref(job)} key={job.id} className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-6 transition-all hover:-translate-y-1 hover:border-[var(--ink)] hover:shadow-lg sm:grid-cols-[1fr_auto] sm:items-center">
                 <div>
-                  {job.urgent && <span className="mb-2 inline-block rounded-full bg-[var(--coral)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}
+                  {job.urgent && <span className="mb-2 mr-2 inline-block rounded-full bg-[var(--coral)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}
+                  {job.unclaimed && <span className="mb-2 inline-block rounded-full bg-[var(--yellow)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--ink)]">Unclaimed</span>}
                   <h3 className="text-xl font-bold">{job.title}</h3>
                   <p className="mt-2 text-sm font-semibold text-[var(--muted)]">{job.company} · {job.city}, {job.state} · Posted {timeAgo(job.postedAt)}</p>
                 </div>
@@ -119,6 +120,7 @@ export default async function JobOrCategoryPage({ params }: SlugPageProps) {
             <div className="flex flex-wrap gap-2">
               <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase ${job.status !== "published" ? "bg-[var(--line)] text-[var(--muted)]" : "bg-[var(--mint)]"}`}>{job.status !== "published" ? "No longer accepting applications" : "Open role"}</span>
               {job.urgent && <span className="rounded-full bg-[var(--coral)] px-3 py-1 text-[11px] font-bold uppercase text-white">Urgently hiring</span>}
+              {job.unclaimed && <span className="rounded-full bg-[var(--yellow)] px-3 py-1 text-[11px] font-bold uppercase text-[var(--ink)]">Unclaimed — pending employer verification</span>}
             </div>
             <h1 className="display mt-6 text-5xl font-bold leading-[.95] tracking-[-.04em] sm:text-7xl">{job.title}</h1>
             <p className="mt-5 text-lg font-semibold text-[var(--muted)]">{job.company} · {job.address ? `${job.address}, ` : ""}{job.city}, {job.state} · Posted {timeAgo(job.postedAt)}</p>

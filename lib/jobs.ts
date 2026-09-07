@@ -16,6 +16,7 @@ export type Job = {
   address: string | null;
   urgent: boolean;
   requirements: string[];
+  unclaimed: boolean;
 };
 
 function expiresIn30Days(postedAt: string) {
@@ -39,6 +40,7 @@ const demoJobsRaw = [
     address: "412 Magnolia Ave, Fort Worth, TX 76104",
     urgent: true,
     requirements: ["Reliable transportation", "Available weekends", "1+ year kitchen experience"],
+    unclaimed: false,
   },
   {
     id: "demo-north-star-electrician",
@@ -56,6 +58,7 @@ const demoJobsRaw = [
     address: null,
     urgent: false,
     requirements: [],
+    unclaimed: false,
   },
   {
     id: "demo-patel-caregiver",
@@ -73,6 +76,7 @@ const demoJobsRaw = [
     address: null,
     urgent: false,
     requirements: [],
+    unclaimed: false,
   },
   {
     id: "demo-lone-star-warehouse",
@@ -90,6 +94,7 @@ const demoJobsRaw = [
     address: null,
     urgent: false,
     requirements: [],
+    unclaimed: false,
   },
 ];
 
