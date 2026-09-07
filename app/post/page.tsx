@@ -7,6 +7,17 @@ export const metadata: Metadata = {
   alternates: { canonical: "/post" },
 };
 
-export default function PostPage() {
-  return <PostForm />;
+const CONFIRM_ERROR_MESSAGES: Record<string, string> = {
+  missing: "That confirmation link is missing its token.",
+  invalid: "That confirmation link is invalid or has already been used.",
+  account: "We couldn't set up your account. Try submitting your listing again.",
+  job: "We couldn't publish your listing. Try submitting it again.",
+};
+
+type PostPageProps = { searchParams: Promise<{ confirmError?: string }> };
+
+export default async function PostPage({ searchParams }: PostPageProps) {
+  const { confirmError } = await searchParams;
+  const initialError = confirmError ? (CONFIRM_ERROR_MESSAGES[confirmError] ?? "Something went wrong confirming your listing.") : "";
+  return <PostForm initialError={initialError} />;
 }

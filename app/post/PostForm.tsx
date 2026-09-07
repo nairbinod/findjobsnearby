@@ -1,12 +1,14 @@
 "use client";
 /* eslint-disable @next/next/no-html-link-for-pages */
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { buildJobHref } from "@/lib/geo";
 import { containsContactInfo, CONTACT_INFO_MESSAGE } from "@/lib/contact-guard";
 import AuthNav from "@/components/AuthNav";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const employmentTypes = [
   ["Full-time", "full_time"],
@@ -17,9 +19,15 @@ const employmentTypes = [
 
 const jobCategories = ["Food & hospitality", "Skilled trades", "Care & education", "Operations"] as const;
 
-export default function PostForm() {
+export default function PostForm({ initialError = "" }: { initialError?: string }) {
   const [draft, setDraft] = useState(false);
   const [published, setPublished] = useState(false);
+  // US-70: an anonymous visitor can still draft and submit a listing --
+  // isSignedIn gates whether publishing happens instantly (existing
+  // behavior) or goes through the email-confirm path. null = still checking.
+  const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
+  const [email, setEmail] = useState("");
+  const [pendingConfirmation, setPendingConfirmation] = useState(false);
   const [title, setTitle] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [pay, setPay] = useState("");
@@ -36,11 +44,16 @@ export default function PostForm() {
   // require individual opt-in. Never merged into requirementQuestions directly.
   const [suggestedPreferred, setSuggestedPreferred] = useState<string[]>([]);
   const [selectedPreferred, setSelectedPreferred] = useState<Set<string>>(new Set());
-  const [publishMessage, setPublishMessage] = useState("");
+  const [publishMessage, setPublishMessage] = useState(initialError);
   const [publishing, setPublishing] = useState(false);
   const [drafting, setDrafting] = useState(false);
   const [aiDescription, setAiDescription] = useState("");
   const [flags, setFlags] = useState<string[]>([]);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data }) => setIsSignedIn(Boolean(data.user)));
+  }, []);
   const [postedRoles, setPostedRoles] = useState<{ id: string; title: string; city: string; state: string }[]>([]);
 
   async function createDraft(event: FormEvent<HTMLFormElement>) {
@@ -106,19 +119,13 @@ export default function PostForm() {
     setFlags([]);
     setDraft(false);
     setPublished(false);
+    setPendingConfirmation(false);
     setPublishMessage("");
   }
 
   async function publishJob() {
     setPublishing(true);
     setPublishMessage("");
-    const supabase = createSupabaseBrowserClient();
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      setPublishMessage("Sign in with an employer account before publishing this listing.");
-      setPublishing(false);
-      return;
-    }
 
     const responsibilityList = responsibilities.split("\n").map((item) => item.trim()).filter(Boolean);
     if (responsibilityList.length < 3 || responsibilityList.length > 5) {
@@ -137,6 +144,54 @@ export default function PostForm() {
       setPublishing(false);
       return;
     }
+
+    // US-70: no session yet -- draft and submit with just an email, publish
+    // happens once they confirm it, instead of requiring sign-in up front.
+    if (!isSignedIn) {
+      if (!EMAIL_RE.test(email.trim())) {
+        setPublishMessage("Enter a valid email address to receive your confirmation link.");
+        setPublishing(false);
+        return;
+      }
+      try {
+        const response = await fetch("/api/post-job/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email.trim(),
+            title,
+            companyName,
+            city: location,
+            state: "TX",
+            address: address.trim() || null,
+            urgent,
+            payRange: pay,
+            employmentType: type,
+            category,
+            responsibilities: responsibilityList,
+            requirements: finalRequirements,
+            description: aiDescription || responsibilityList.join(" "),
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error ?? "Could not save your listing.");
+        setPendingConfirmation(true);
+      } catch (error) {
+        setPublishMessage(error instanceof Error ? error.message : "Could not save your listing.");
+      } finally {
+        setPublishing(false);
+      }
+      return;
+    }
+
+    const supabase = createSupabaseBrowserClient();
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      setPublishMessage("Sign in with an employer account before publishing this listing.");
+      setPublishing(false);
+      return;
+    }
+
     const { data, error } = await supabase.from("jobs").insert({
       employer_id: userData.user.id,
       title,
@@ -193,8 +248,8 @@ export default function PostForm() {
           </form>
           <aside className="rounded-2xl border border-[var(--line)] bg-[var(--mint)] p-6 sm:p-8">
             <div className="flex items-center justify-between"><p className="text-xs font-bold uppercase tracking-[.15em] text-[var(--coral)]">{published ? "Published" : draft ? "Review before publishing" : "Your listing preview"}</p><span className="text-xl">✳</span></div>
-            {published ? <div className="mt-10 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--yellow)] text-2xl">✓</div><h2 className="display mt-6 text-3xl font-bold">You&apos;re live.</h2><p className="mt-3 text-sm leading-6 text-[var(--muted)]">Your listing is ready for local job seekers to discover.</p><button onClick={addAnotherRole} className="mt-7 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white">Add another role <span aria-hidden="true">+</span></button><p className="mt-3 text-xs text-[var(--muted)]">Hiring for more than one position? Post each role separately — free every time.</p></div> : draft ? <div className="mt-10">{urgent && <span className="mb-3 inline-block rounded-full bg-[var(--coral)] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}<h2 className="display text-4xl font-bold">{title}</h2><p className="mt-2 font-semibold">{companyName} · {address ? `${address}, ${location}` : location} · {type.replace("_", "-")}</p><p className="mt-1 font-bold text-[var(--coral)]">{pay}</p>{flags.length > 0 && <div className="mt-6 rounded-xl border border-[var(--coral)] bg-white/70 p-4"><p className="text-xs font-bold uppercase tracking-wider text-[var(--coral)]">Review before publishing</p><p className="mt-2 text-sm leading-6">Your listing includes wording that may be exclusionary or legally risky: {flags.map((flag) => `"${flag}"`).join(", ")}. Edit it above if you&apos;d like, then draft again.</p></div>}<div className="mt-8 border-t border-[var(--ink)]/15 pt-5"><p className="text-sm leading-7">{aiDescription}</p></div><div className="mt-6 space-y-1 text-sm leading-7 text-[var(--ink)]/70">{responsibilities.split("\n").filter(Boolean).map((item) => <span className="block" key={item}>• {item}</span>)}</div>{requirementQuestions.length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Requirements</p><p className="mt-1 text-xs text-[var(--ink)]/60">AI rephrased these as questions candidates check off. Edit any of them before publishing.</p><div className="mt-3 space-y-2">{requirementQuestions.map((item, index) => <input key={index} value={item} onChange={(event) => setRequirementQuestions((current) => current.map((q, i) => (i === index ? event.target.value : q)))} className="w-full rounded-lg border border-[var(--ink)]/15 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--coral)]" />)}</div></div>}
-                {suggestedPreferred.length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Suggested by AI — not something you said</p><p className="mt-1 text-xs text-[var(--ink)]/60">Commonly requested for this type of role. Check any you&apos;d like to add — none are included unless you pick them.</p><div className="mt-3 space-y-2">{suggestedPreferred.map((item) => <label key={item} className="flex items-center gap-3 rounded-lg bg-white/70 px-3 py-2 text-sm"><input type="checkbox" checked={selectedPreferred.has(item)} onChange={() => setSelectedPreferred((current) => { const next = new Set(current); if (next.has(item)) next.delete(item); else next.add(item); return next; })} className="h-4 w-4 accent-[var(--coral)]" />{item}</label>)}</div></div>}<p className="mt-8 text-xs leading-5 text-[var(--muted)]">AI-assisted draft. Only the details you provided are included. Nothing publishes until you approve it.</p><button onClick={publishJob} disabled={publishing} className="mt-6 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white disabled:opacity-60">{publishing ? "Publishing..." : "Approve & publish"} <span aria-hidden="true">↗</span></button>{publishMessage && <p role="status" className="mt-4 text-sm leading-5 text-[var(--muted)]">{publishMessage}</p>}</div> : <div className="mt-12"><div className="h-4 w-24 rounded bg-white/70" /><div className="mt-5 h-10 w-4/5 rounded bg-white/70" /><div className="mt-3 h-4 w-2/5 rounded bg-white/70" /><div className="mt-10 space-y-3 border-t border-[var(--ink)]/10 pt-6"><div className="h-3 w-full rounded bg-white/60" /><div className="h-3 w-11/12 rounded bg-white/60" /><div className="h-3 w-4/5 rounded bg-white/60" /></div><p className="mt-12 text-sm leading-6 text-[var(--muted)]">Your approved listing will be clear, grounded in your words, and ready to share with nearby candidates.</p></div>}
+            {published ? <div className="mt-10 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--yellow)] text-2xl">✓</div><h2 className="display mt-6 text-3xl font-bold">You&apos;re live.</h2><p className="mt-3 text-sm leading-6 text-[var(--muted)]">Your listing is ready for local job seekers to discover.</p><button onClick={addAnotherRole} className="mt-7 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white">Add another role <span aria-hidden="true">+</span></button><p className="mt-3 text-xs text-[var(--muted)]">Hiring for more than one position? Post each role separately — free every time.</p></div> : pendingConfirmation ? <div className="mt-10 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--yellow)] text-2xl">✉</div><h2 className="display mt-6 text-3xl font-bold">Almost there.</h2><p className="mt-3 text-sm leading-6 text-[var(--muted)]">Your listing has been created. Check <strong>{email}</strong> and click the confirmation link to publish it and start receiving applicants.</p></div> : draft ? <div className="mt-10">{urgent && <span className="mb-3 inline-block rounded-full bg-[var(--coral)] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">Urgently hiring</span>}<h2 className="display text-4xl font-bold">{title}</h2><p className="mt-2 font-semibold">{companyName} · {address ? `${address}, ${location}` : location} · {type.replace("_", "-")}</p><p className="mt-1 font-bold text-[var(--coral)]">{pay}</p>{flags.length > 0 && <div className="mt-6 rounded-xl border border-[var(--coral)] bg-white/70 p-4"><p className="text-xs font-bold uppercase tracking-wider text-[var(--coral)]">Review before publishing</p><p className="mt-2 text-sm leading-6">Your listing includes wording that may be exclusionary or legally risky: {flags.map((flag) => `"${flag}"`).join(", ")}. Edit it above if you&apos;d like, then draft again.</p></div>}<div className="mt-8 border-t border-[var(--ink)]/15 pt-5"><p className="text-sm leading-7">{aiDescription}</p></div><div className="mt-6 space-y-1 text-sm leading-7 text-[var(--ink)]/70">{responsibilities.split("\n").filter(Boolean).map((item) => <span className="block" key={item}>• {item}</span>)}</div>{requirementQuestions.length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Requirements</p><p className="mt-1 text-xs text-[var(--ink)]/60">AI rephrased these as questions candidates check off. Edit any of them before publishing.</p><div className="mt-3 space-y-2">{requirementQuestions.map((item, index) => <input key={index} value={item} onChange={(event) => setRequirementQuestions((current) => current.map((q, i) => (i === index ? event.target.value : q)))} className="w-full rounded-lg border border-[var(--ink)]/15 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--coral)]" />)}</div></div>}
+                {suggestedPreferred.length > 0 && <div className="mt-6 border-t border-[var(--ink)]/15 pt-5"><p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Suggested by AI — not something you said</p><p className="mt-1 text-xs text-[var(--ink)]/60">Commonly requested for this type of role. Check any you&apos;d like to add — none are included unless you pick them.</p><div className="mt-3 space-y-2">{suggestedPreferred.map((item) => <label key={item} className="flex items-center gap-3 rounded-lg bg-white/70 px-3 py-2 text-sm"><input type="checkbox" checked={selectedPreferred.has(item)} onChange={() => setSelectedPreferred((current) => { const next = new Set(current); if (next.has(item)) next.delete(item); else next.add(item); return next; })} className="h-4 w-4 accent-[var(--coral)]" />{item}</label>)}</div></div>}<p className="mt-8 text-xs leading-5 text-[var(--muted)]">AI-assisted draft. Only the details you provided are included. Nothing publishes until you approve it.</p>{isSignedIn === false && <label className="mt-6 block text-xs font-bold uppercase tracking-wider text-[var(--ink)]/60">Your email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@yourbusiness.com" className="mt-2 w-full rounded-lg border border-[var(--ink)]/15 bg-white px-3 py-3 text-sm font-normal normal-case tracking-normal text-[var(--ink)] outline-none focus:border-[var(--coral)]" /><span className="mt-1 block text-xs font-normal normal-case tracking-normal text-[var(--ink)]/60">We&apos;ll send a link to confirm and publish this listing — no password needed.</span></label>}<button onClick={publishJob} disabled={publishing || isSignedIn === null} className="mt-6 w-full rounded-full bg-[var(--ink)] px-6 py-4 font-bold text-white disabled:opacity-60">{publishing ? "Publishing..." : isSignedIn === false ? "Send confirmation email" : "Approve & publish"} <span aria-hidden="true">↗</span></button>{publishMessage && <p role="status" className="mt-4 text-sm leading-5 text-[var(--muted)]">{publishMessage}</p>}</div> : <div className="mt-12"><div className="h-4 w-24 rounded bg-white/70" /><div className="mt-5 h-10 w-4/5 rounded bg-white/70" /><div className="mt-3 h-4 w-2/5 rounded bg-white/70" /><div className="mt-10 space-y-3 border-t border-[var(--ink)]/10 pt-6"><div className="h-3 w-full rounded bg-white/60" /><div className="h-3 w-11/12 rounded bg-white/60" /><div className="h-3 w-4/5 rounded bg-white/60" /></div><p className="mt-12 text-sm leading-6 text-[var(--muted)]">Your approved listing will be clear, grounded in your words, and ready to share with nearby candidates.</p></div>}
           </aside>
         </div>
       </main>

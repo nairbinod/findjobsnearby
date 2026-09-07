@@ -122,6 +122,27 @@ export async function notifySeasonReturn(candidateId: string, jobs: Job[]) {
   for (const job of unseen) await logNotification(admin, "season_return", candidateId, job.id);
 }
 
+/** US-70: confirm-to-publish link for an employer who posted without an
+ * account. Not deduplicated via notification_log like the others -- there's
+ * no account yet to key off of, and re-submitting legitimately should
+ * re-send (the caller enforces the per-email rate cap, not this function). */
+export async function sendJobConfirmationEmail(email: string, token: string, jobTitle: string) {
+  const confirmUrl = `${SITE_URL}/post/confirm?token=${token}`;
+
+  await getResendClient().emails.send({
+    from: NOTIFICATIONS_FROM,
+    to: email,
+    subject: `Confirm your listing: ${jobTitle}`,
+    html: wrap(
+      "Confirm to publish your job listing",
+      `<h1 style="font-size:22px;color:#152d2a;margin:0 0 12px;">One click to go live.</h1>
+       <p style="font-size:15px;line-height:1.6;color:#152d2a;">Your listing for &ldquo;${jobTitle}&rdquo; is ready. Confirm this email address to publish it and start receiving applicants.</p>
+       <a href="${confirmUrl}" style="display:inline-block;margin-top:16px;background:#152d2a;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:700;font-size:14px;">Confirm & publish →</a>
+       <p style="margin-top:20px;font-size:12px;color:#64716d;">If you didn't request this, you can ignore this email -- nothing publishes until this link is clicked.</p>`,
+    ),
+  });
+}
+
 /** US-18: notify the recipient of a new in-app message. One email per
  * message (not digested) -- matches how notifyNewApplication fires per
  * application, and message volume between an unlocked pair is low. */

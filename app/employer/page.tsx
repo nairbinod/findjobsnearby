@@ -137,6 +137,11 @@ export default function EmployerPage() {
         setUnlockMessage("Payment received — refreshing your unlocked profiles...");
         setTimeout(() => void loadJobs(), 2500);
       }
+      // US-70: landed here straight from confirming an email-only listing --
+      // welcome them into the account that confirmation just created.
+      if (new URLSearchParams(window.location.search).get("posted")) {
+        setUnlockMessage("Your listing is confirmed and live. Welcome to your employer dashboard.");
+      }
 
       const [viewCountEntries, applicationCountEntries] = await Promise.all([
         Promise.all((data ?? []).map(async (job) => {

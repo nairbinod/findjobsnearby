@@ -51,6 +51,11 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
   - *AC:* AI does not invent facts I didn't state; unstated fields are left blank, not filled in.
 - **US-4:** As an employer, I want to review and edit the AI-drafted listing before it publishes, so nothing goes live without my approval.
 - **US-5:** As an employer, I want posting to always be free, so I never pay just to advertise a position.
+- **US-70:** As an employer without an account yet, I want to draft and submit a job by providing only my email instead of signing in first, so I can see my listing take shape before committing to anything.
+  - *AC:* The listing saves in a pending, non-public state on submission — not visible in search/browse, not indexed — and the visitor is told it's created but needs email confirmation before it goes live.
+  - *AC:* Clicking the confirmation link both signs the employer in (a normal persistent account and session, same mechanism as the existing magic-link sign-in) and publishes the listing in the same step — no separate account-creation screen afterward.
+  - *AC:* Already-signed-in employers are unaffected and continue to publish instantly (US-2 through US-5) — this is an additional entry point, not a replacement.
+  - *AC:* Unconfirmed submissions are capped per email in a rolling window, since this is the one path in the product reachable with no account and no session.
 - **US-54:** As an employer, I want to edit a published listing's details, so I can fix mistakes or update information without re-posting from scratch.
   - *AC:* Same guardrails as original posting apply (§5) — pay range still required, 3–5 responsibilities, no contact info. Edits take effect immediately; no separate admin review, matching the original posting flow's own-approval model.
 - **US-55:** As an employer, I want to close a listing before it expires, so candidates stop applying to a role I've already filled.
