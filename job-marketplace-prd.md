@@ -200,6 +200,25 @@ Deferred to Phase 2 — see §12. Phase 1 ships a static downloadable share imag
 - **US-56:** As a candidate, I want to withdraw an application I've submitted, so I can remove it if my circumstances change.
   - *AC:* A withdrawn application is marked as such for the employer, not silently deleted — if they already reviewed or paid to unlock the profile, that history stays visible. Withdrawing does not refund a paid unlock (US-16), since the unlock is a permanent, account-level entitlement (US-16's AC), not tied to a single application's lifecycle.
 
+### 4.20 Unclaimed listings (founder-seeded, employer-claimed)
+
+An extension of founder-assisted seeding (US-35, §4.14) for sourcing real DFW jobs from public channels rather than direct outreach alone.
+
+- **US-64:** As a founder/team member, I want to manually create a job listing from a public Facebook post (rewritten in our own format, not copy-pasted), so I can seed real DFW jobs without scraping or reproducing someone else's content.
+  - *AC:* The listing is marked "Unclaimed" and clearly labeled as pending employer verification everywhere it's shown to candidates (US-67).
+  - *AC:* Because this publishes a real business's name without their knowledge or agreement, there must be an easy, obvious way for that business to request removal before they ever claim it — not just a path to claiming.
+- **US-65:** As a small business owner, I want a one-tap link (text or email) letting me claim a job listing that's already been created for me, so I don't have to build anything myself to get started.
+  - *AC:* Claiming requires no upfront account setup — clicking the link and confirming "yes, this is my posting" is enough. Normal account creation (the existing flow in US-1) happens after claiming, not before, and only if needed for anything beyond that confirmation.
+  - *AC:* The claim link uses an unguessable, single-use token (matching the pattern already used for unsubscribe links) — this grants edit access, applicant visibility, and payment ability over the listing, so it carries materially higher stakes than a preference link and must not be guessable or reusable after being claimed.
+- **US-66:** As a small business owner, I want claiming my listing to be the only action required to start receiving applicants, so there's nothing else standing between me and getting candidates.
+  - *AC:* Once claimed, the listing behaves exactly like any self-posted listing — same edit access, same applicant visibility, same $2.99 contact model.
+- **US-67:** As a candidate, I want to see when a listing hasn't been claimed by its employer yet, so I know its status before applying.
+  - *AC:* Unclaimed listings show a visible "Unclaimed — pending employer verification" badge.
+- **US-68:** As a candidate applying to an unclaimed listing, I want my application safely held rather than lost, so it isn't wasted if the employer claims the job after I've applied.
+  - *AC:* Applications submitted before a claim are preserved and become visible to the employer automatically upon claim — never discarded or silently dropped.
+- **US-69:** As a platform operator, I want unclaimed listings to auto-expire after 14 days, so stale, unverified postings don't accumulate or hurt listing freshness signals (§6).
+  - *AC:* Shorter than the standard 30-day expiry (US-31, §4.11) specifically because an unclaimed listing hasn't been verified by anyone who can act on it.
+
 ---
 
 ## 5. AI Agent Guardrails (applies to listings, profiles, and video — §4.1–4.3, 4.12)
