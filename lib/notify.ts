@@ -163,6 +163,26 @@ export async function sendJobConfirmationEmail(email: string, token: string, job
   });
 }
 
+/** US-71: confirm-to-apply link for a candidate who applied without an
+ * account. Mirrors sendJobConfirmationEmail -- not deduplicated via
+ * notification_log since there's no account yet to key off of. */
+export async function sendCandidateConfirmationEmail(email: string, token: string, jobTitle: string) {
+  const confirmUrl = `${SITE_URL}/apply/confirm?token=${token}`;
+
+  await getResendClient().emails.send({
+    from: NOTIFICATIONS_FROM,
+    to: email,
+    subject: `Confirm your application: ${jobTitle}`,
+    html: wrap(
+      "Confirm to submit your application",
+      `<h1 style="font-size:22px;color:#152d2a;margin:0 0 12px;">One click to apply.</h1>
+       <p style="font-size:15px;line-height:1.6;color:#152d2a;">Your application for &ldquo;${jobTitle}&rdquo; is ready. Confirm this email address to submit it -- you'll also be able to review or edit it, and any other applications, from your account afterward.</p>
+       <a href="${confirmUrl}" style="display:inline-block;margin-top:16px;background:#152d2a;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:700;font-size:14px;">Confirm & apply →</a>
+       <p style="margin-top:20px;font-size:12px;color:#64716d;">If you didn't request this, you can ignore this email -- nothing is submitted until this link is clicked.</p>`,
+    ),
+  });
+}
+
 /** US-18: notify the recipient of a new in-app message. One email per
  * message (not digested) -- matches how notifyNewApplication fires per
  * application, and message volume between an unlocked pair is low. */

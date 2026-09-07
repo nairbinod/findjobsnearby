@@ -1,8 +1,10 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { containsContactInfo, CONTACT_INFO_MESSAGE } from "@/lib/contact-guard";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type ApplyFormProps = { jobId: string; jobTitle: string; jobCategory?: string; jobRequirements?: string[] };
 
@@ -46,6 +48,18 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory, jobRequirement
   const [checkedRequirements, setCheckedRequirements] = useState<Set<string>>(new Set());
   const [requirementsContext, setRequirementsContext] = useState("");
   const [attested, setAttested] = useState(false);
+
+  // US-71: an anonymous visitor can still draft and submit an application --
+  // isSignedIn gates whether it applies instantly (existing behavior) or
+  // goes through the email-confirm path. null = still checking.
+  const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
+  const [email, setEmail] = useState("");
+  const [pendingConfirmation, setPendingConfirmation] = useState(false);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data }) => setIsSignedIn(Boolean(data.user)));
+  }, []);
 
   function toggleRequirement(item: string) {
     setCheckedRequirements((current) => {
@@ -160,6 +174,54 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory, jobRequirement
       setMessage(CONTACT_INFO_MESSAGE);
       return;
     }
+
+    if (jobId.startsWith("demo-")) {
+      setMessage("This preview role is not accepting applications yet. Live roles will be connected to Supabase.");
+      return;
+    }
+
+    // US-71: no session yet -- draft and submit with just an email, the
+    // application goes in once they confirm it, instead of requiring sign-in.
+    if (!isSignedIn) {
+      if (!EMAIL_RE.test(email.trim())) {
+        setMessage("Enter a valid email address to receive your confirmation link.");
+        return;
+      }
+      setBusy(true);
+      setMessage("");
+      try {
+        const response = await fetch("/api/apply-job/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email.trim(),
+            jobId,
+            jobTitle,
+            roleTitle,
+            category,
+            availability,
+            availableFrom: availableFrom || null,
+            availableUntil: availableUntil || null,
+            desiredPay: desiredPay || null,
+            workHistory,
+            curatedContent,
+            approved,
+            requirementMatches: Array.from(checkedRequirements),
+            requirementNotes: requirementsContext.trim() || null,
+            hasRequirements: jobRequirements.length > 0,
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error ?? "Could not save your application.");
+        setPendingConfirmation(true);
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Could not save your application.");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     setBusy(true);
     setMessage("");
     const supabase = createSupabaseBrowserClient();
@@ -167,12 +229,6 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory, jobRequirement
 
     if (!userData.user) {
       setMessage("Sign in first, then come back to apply with your profile.");
-      setBusy(false);
-      return;
-    }
-
-    if (jobId.startsWith("demo-")) {
-      setMessage("This preview role is not accepting applications yet. Live roles will be connected to Supabase.");
       setBusy(false);
       return;
     }
@@ -228,6 +284,16 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory, jobRequirement
 
   if (!open) {
     return <button onClick={() => void openForm()} className="mt-7 w-full rounded-full bg-[var(--coral)] px-5 py-4 font-bold">Apply for this job <span aria-hidden="true">→</span></button>;
+  }
+
+  if (pendingConfirmation) {
+    return (
+      <div className="mt-6 border-t border-white/15 pt-6 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--yellow)] text-2xl">✉</div>
+        <h3 className="display mt-4 text-2xl font-bold">Almost there.</h3>
+        <p className="mt-3 text-sm leading-6 text-white/70">Check <strong>{email}</strong> and click the confirmation link to submit your application. You&apos;ll be able to review or edit it, and any other applications, from your account.</p>
+      </div>
+    );
   }
 
   const isNewProfileReview = selectedProfileId === "new" && profileStep === "review";
@@ -295,8 +361,12 @@ export default function ApplyForm({ jobId, jobTitle, jobCategory, jobRequirement
         </div>
       )}
 
-      <button disabled={busy || loadingProfiles || drafting} className="w-full rounded-full bg-[var(--yellow)] px-5 py-4 font-bold text-[var(--ink)] disabled:opacity-60">
-        {drafting ? "Drafting with AI..." : busy ? "Sending..." : isNewProfileReview ? "Approve & apply" : selectedProfileId === "new" ? "Draft my profile" : "Send application"} <span aria-hidden="true">→</span>
+      {isNewProfileReview && isSignedIn === false && (
+        <label className="block text-xs font-bold uppercase tracking-wider text-white/60">Your email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="mt-2 min-h-12 w-full rounded-lg border border-white/30 bg-white px-3 py-3 text-sm font-normal normal-case tracking-normal text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--yellow)] focus:ring-2 focus:ring-[var(--yellow)]/30" /><span className="mt-1 block text-xs font-normal normal-case tracking-normal text-white/50">We&apos;ll send a link to confirm and submit this application — no password needed.</span></label>
+      )}
+
+      <button disabled={busy || loadingProfiles || drafting || isSignedIn === null} className="w-full rounded-full bg-[var(--yellow)] px-5 py-4 font-bold text-[var(--ink)] disabled:opacity-60">
+        {drafting ? "Drafting with AI..." : busy ? "Sending..." : isNewProfileReview ? (isSignedIn === false ? "Send confirmation email" : "Approve & apply") : selectedProfileId === "new" ? "Draft my profile" : "Send application"} <span aria-hidden="true">→</span>
       </button>
       {message && <p role="status" className="text-sm leading-5 text-white/80">{message}</p>}
     </form>

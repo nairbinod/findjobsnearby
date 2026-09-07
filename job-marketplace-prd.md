@@ -99,6 +99,11 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
   - *AC:* An optional free-text box remains available for additional context per application, separate from and in addition to the checklist.
   - *AC:* Leaving items unchecked never blocks submission — a candidate can apply having met 0 of the listed requirements if they choose to.
   - *AC:* Submission requires checking a separate attestation box ("My selections above are truthful to the best of my knowledge") before the application can be sent — this is required, not optional, since it's what gives US-61's "self-reported, not verified" disclosure real weight rather than just a legal hedge.
+- **US-71:** As a candidate without an account yet, I want to apply to a job by providing only my email instead of signing in first, so applying feels as effortless as it's supposed to be.
+  - *AC:* The profile and application save in a pending state on submission, not visible to the employer, until confirmed by email. If that email already belongs to an existing account, the new profile and application attach to that account instead of creating a duplicate.
+  - *AC:* Clicking the confirmation link both signs the candidate in (a normal persistent account and session, same mechanism as US-70) and submits the application in the same step, landing them on their account page where they can review or edit this and any past submissions.
+  - *AC:* Already-signed-in candidates are unaffected and continue to apply instantly — this is an additional entry point, not a replacement for US-7 through US-10.
+  - *AC:* Unconfirmed submissions are capped per email in a rolling window, matching US-70's own guardrail.
 
 ### 4.6 Discovering & paying to contact candidates
 
