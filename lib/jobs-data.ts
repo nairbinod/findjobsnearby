@@ -27,6 +27,7 @@ type DbJobRow = {
   description: string | null;
   responsibilities: string[] | null;
   created_at: string;
+  updated_at: string;
   expires_at: string | null;
   status: "published" | "closed" | "expired";
   address: string | null;
@@ -54,6 +55,7 @@ function fromDbRow(row: DbJobRow): Job {
     pay: row.pay_range,
     category: row.category ?? "Operations",
     postedAt: row.created_at,
+    updatedAt: row.updated_at,
     expiresAt: row.expires_at,
     description: row.description ?? "A local opportunity from a nearby business.",
     responsibilities: row.responsibilities ?? [],
@@ -65,7 +67,7 @@ function fromDbRow(row: DbJobRow): Job {
   };
 }
 
-const JOB_COLUMNS = "id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at, status, address, urgent, requirements, employer_id";
+const JOB_COLUMNS = "id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, updated_at, expires_at, status, address, urgent, requirements, employer_id";
 
 /** Server-only: merges the curated demo listings with published jobs from
  * Supabase so public pages have real content on day one and keep working

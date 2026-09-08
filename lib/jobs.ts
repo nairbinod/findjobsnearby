@@ -9,6 +9,7 @@ export type Job = {
   pay: string;
   category: string;
   postedAt: string;
+  updatedAt: string;
   expiresAt: string | null;
   description: string;
   responsibilities: string[];
@@ -98,6 +99,6 @@ const demoJobsRaw = [
   },
 ];
 
-export const jobs: Job[] = demoJobsRaw.map((job) => ({ ...job, expiresAt: expiresIn30Days(job.postedAt), status: "published" as const }));
+export const jobs: Job[] = demoJobsRaw.map((job) => ({ ...job, updatedAt: job.postedAt, expiresAt: expiresIn30Days(job.postedAt), status: "published" as const }));
 
 export const categories = ["All jobs", "Food & hospitality", "Skilled trades", "Care & education", "Operations"];

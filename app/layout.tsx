@@ -66,6 +66,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         ]).replace(/</g, "\\u003c") }} />
         <ReferralCapture />
         {children}
+        {/* Site-wide footer, rendered on every page -- every static/marketing
+            page belongs here (internal links are real, durable SEO value: link
+            equity, crawl paths, page context). When adding a new static page,
+            add it both here and to STATIC_ROUTES in app/sitemap.ts. */}
         <footer className="border-t border-[var(--line)] bg-[var(--cream)]">
           <div className="mx-auto grid max-w-[1100px] gap-10 px-6 py-12 sm:grid-cols-3 lg:px-10">
             <div>
@@ -81,6 +85,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <ul className="mt-4 space-y-3 text-sm text-[var(--muted)]">
                 <li><Link href="/post" className="hover:text-[var(--ink)]">Post a Job</Link></li>
                 <li><Link href="/employers" className="hover:text-[var(--ink)]">How Hiring Works</Link></li>
+                <li><Link href="/employer-interest" className="hover:text-[var(--ink)]">Get Founder-Assisted Hiring</Link></li>
                 <li><Link href="/plans" className="hover:text-[var(--ink)]">Pricing</Link></li>
                 <li><Link href="/employer" className="hover:text-[var(--ink)]">Employer Dashboard</Link></li>
               </ul>

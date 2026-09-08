@@ -4,6 +4,10 @@ import { DFW_METRO_CITIES, citySlug, categorySlug, CATEGORIES } from "@/lib/geo"
 import { blogPosts } from "@/lib/blog";
 import { guides } from "@/lib/guides";
 
+// When adding a new static/marketing page here, also link it from the
+// site-wide footer in app/layout.tsx -- internal links are real, durable
+// SEO value (link equity, crawl paths), and a page only in the sitemap
+// with no on-site link pointing to it is easy to forget about.
 const STATIC_ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }[] = [
   { path: "", changeFrequency: "daily", priority: 1 },
   { path: "/jobs", changeFrequency: "daily", priority: 0.9 },
@@ -56,7 +60,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const jobEntries: MetadataRoute.Sitemap = jobs.map((job) => ({
     url: `https://findjobsnearby.com${jobHref(job)}`,
-    lastModified: new Date(job.postedAt),
+    // updatedAt, not postedAt -- this is Google's signal to re-crawl a
+    // listing, and it should move whenever the listing's own content or
+    // status changes, not stay frozen at the original post date forever.
+    lastModified: new Date(job.updatedAt),
     changeFrequency: "weekly",
     priority: 0.6,
   }));

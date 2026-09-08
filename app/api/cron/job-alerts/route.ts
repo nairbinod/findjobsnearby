@@ -34,6 +34,7 @@ export async function GET(request: Request) {
     pay: row.pay_range,
     category: row.category ?? "Operations",
     postedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     expiresAt: null,
     description: "",
     responsibilities: [],

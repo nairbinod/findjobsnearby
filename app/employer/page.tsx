@@ -63,9 +63,6 @@ export default function EmployerPage() {
     const rows = (data as unknown as Applicant[]) ?? [];
     setApplicants(rows);
     setApplicationCounts((counts) => ({ ...counts, [jobId]: rows.filter((row) => !row.withdrawn_at).length }));
-    for (const row of rows) {
-      if (unlockedCandidateIds.has(row.candidate_id) && !unlockedDetails[row.candidate_id]) void loadUnlockedDetails(row.candidate_id);
-    }
     setRefreshToken((token) => token + 1);
   }
 
@@ -159,18 +156,30 @@ export default function EmployerPage() {
       ]);
       setViewCounts(Object.fromEntries(viewCountEntries));
       setApplicationCounts(Object.fromEntries(applicationCountEntries));
-
-      // Seeing applicants (and messaging an unlocked one) is the entire
-      // point of this dashboard -- don't make that a hidden extra click.
-      // Auto-open the job with the most applicants so it's visible on load.
-      const [topJobId, topCount] = applicationCountEntries.reduce((best, entry) => (entry[1] > best[1] ? entry : best), ["", 0] as readonly [string, number]);
-      if (topCount > 0) void showApplicants(topJobId);
     }
     void loadJobs();
-    // showApplicants is intentionally omitted -- this should only run once on
-    // mount, not re-run every time showApplicants is redefined by a render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Reacts to the actual current state instead of being triggered inline
+  // from showApplicants -- calling loadUnlockedDetails from inside a loop
+  // there read a stale, not-yet-re-rendered unlockedCandidateIds when
+  // showApplicants used to be invoked synchronously from loadJobs, silently
+  // skipping the fetch for every candidate who was already unlocked (the
+  // "Unlocked" badge rendered correctly since it reads state at paint time,
+  // but its details stayed on "Loading details..." forever). This runs
+  // whenever the visible applicants or the unlocked set changes, and each
+  // candidate is only ever fetched once thanks to the unlockedDetails check.
+  useEffect(() => {
+    for (const applicant of applicants) {
+      if (unlockedCandidateIds.has(applicant.candidate_id) && !unlockedDetails[applicant.candidate_id]) {
+        // loadUnlockedDetails only calls setState after its await, so this
+        // isn't the synchronous-setState-in-effect pattern the rule guards
+        // against -- same justification as loadAccount in app/account/page.tsx.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        void loadUnlockedDetails(applicant.candidate_id);
+      }
+    }
+  }, [applicants, unlockedCandidateIds, unlockedDetails]);
 
   const visibleApplicants = useMemo(() => applicants.filter((applicant) => {
     const profile = unwrapEmbed(applicant.candidate_profiles);

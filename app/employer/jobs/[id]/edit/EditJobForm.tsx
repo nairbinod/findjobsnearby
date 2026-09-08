@@ -113,7 +113,6 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
       responsibilities: responsibilityList,
       requirements: finalRequirements.length > 0 ? finalRequirements : null,
       description: aiDescription,
-      updated_at: new Date().toISOString(),
     }).eq("id", job.id).select("id");
 
     // A Supabase update that RLS silently filters out (0 matching rows)

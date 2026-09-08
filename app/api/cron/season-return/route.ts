@@ -53,6 +53,7 @@ export async function GET(request: Request) {
       pay: row.pay_range,
       category: row.category,
       postedAt: now.toISOString(),
+      updatedAt: now.toISOString(),
       expiresAt: null,
       description: "",
       responsibilities: [],
