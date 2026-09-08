@@ -3,7 +3,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendClaimListingEmail } from "@/lib/notify";
 import { containsContactInfo, CONTACT_INFO_MESSAGE } from "@/lib/contact-guard";
-import { UNCLAIMED_PLACEHOLDER_ACCOUNT_ID } from "@/lib/unclaimed-listings";
 
 const SITE_URL = "https://findjobsnearby.com";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,7 +63,7 @@ export async function POST(request: Request) {
 
   const admin = createSupabaseAdminClient();
   const { data: job, error } = await admin.from("jobs").insert({
-    employer_id: UNCLAIMED_PLACEHOLDER_ACCOUNT_ID,
+    employer_id: null,
     title: body.title,
     company_name: body.companyName,
     city: body.city,

@@ -1,7 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { jobs as demoJobs, type Job } from "@/lib/jobs";
 import { buildJobHref } from "@/lib/geo";
-import { UNCLAIMED_PLACEHOLDER_ACCOUNT_ID } from "@/lib/unclaimed-listings";
 
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // New URLs only carry an 8-char id prefix (see buildJobHref). Matched here as
@@ -33,14 +32,14 @@ type DbJobRow = {
   address: string | null;
   urgent: boolean;
   requirements: string[] | null;
-  // Neither of these two is ever put on the client-facing Job object below --
-  // only used here, server-side, to compute the public "unclaimed" boolean.
-  // claim_token itself is deliberately NEVER selected by this query: it's a
-  // bearer secret, and JOB_COLUMNS feeds pages whose data gets serialized
-  // straight into the page's HTML/RSC payload -- selecting it here would
-  // leak the exact credential needed to claim someone else's listing.
-  employer_id: string;
-  claimed_at: string | null;
+  // Never put on the client-facing Job object below -- only used here,
+  // server-side, to compute the public "unclaimed" boolean (a seeded listing
+  // has no employer yet). claim_token itself is deliberately NEVER selected
+  // by this query: it's a bearer secret, and JOB_COLUMNS feeds pages whose
+  // data gets serialized straight into the page's HTML/RSC payload --
+  // selecting it here would leak the exact credential needed to claim
+  // someone else's listing.
+  employer_id: string | null;
 };
 
 function fromDbRow(row: DbJobRow): Job {
@@ -62,11 +61,11 @@ function fromDbRow(row: DbJobRow): Job {
     address: row.address,
     urgent: row.urgent,
     requirements: row.requirements ?? [],
-    unclaimed: row.employer_id === UNCLAIMED_PLACEHOLDER_ACCOUNT_ID && row.claimed_at === null,
+    unclaimed: row.employer_id === null,
   };
 }
 
-const JOB_COLUMNS = "id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at, status, address, urgent, requirements, employer_id, claimed_at";
+const JOB_COLUMNS = "id, title, company_name, city, state, employment_type, pay_range, category, description, responsibilities, created_at, expires_at, status, address, urgent, requirements, employer_id";
 
 /** Server-only: merges the curated demo listings with published jobs from
  * Supabase so public pages have real content on day one and keep working

@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { notifyListingRenewal } from "@/lib/notify";
 import type { Job } from "@/lib/jobs";
-import { UNCLAIMED_PLACEHOLDER_ACCOUNT_ID, UNCLAIMED_EXPIRY_DAYS } from "@/lib/unclaimed-listings";
+import { UNCLAIMED_EXPIRY_DAYS } from "@/lib/unclaimed-listings";
 
 // US-31: two related lifecycle steps for a 30-day listing, bundled into one
 // route (rather than two crons) to stay within Vercel's cron-count limits.
 const REMINDER_WINDOW_DAYS = 5;
+
+// pending_job_submissions/pending_candidate_submissions rows are only ever
+// written to (rate-limit check, insert) or read by confirmation_token --
+// nothing else ever revisits an abandoned one, so unconfirmed rows past this
+// age are swept here rather than accumulating forever.
+const PENDING_SUBMISSION_MAX_AGE_DAYS = 7;
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -18,14 +24,13 @@ export async function GET(request: Request) {
   const now = new Date();
   const reminderCutoff = new Date(now.getTime() + REMINDER_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
-  // Unclaimed listings have no real employer to remind -- their employer_id
-  // is the system placeholder, whose "email" isn't a real inbox. Excluded
-  // here rather than left to fail inside notifyListingRenewal's Resend call.
+  // Unclaimed listings have no real employer to remind -- excluded here
+  // rather than left to fail inside notifyListingRenewal's Resend call.
   const { data: expiringSoon } = await admin
     .from("jobs")
     .select("id, title, company_name, city, state, category, pay_range, employment_type, employer_id")
     .eq("status", "published")
-    .neq("employer_id", UNCLAIMED_PLACEHOLDER_ACCOUNT_ID)
+    .not("employer_id", "is", null)
     .lte("expires_at", reminderCutoff)
     .gt("expires_at", now.toISOString());
 
@@ -69,10 +74,28 @@ export async function GET(request: Request) {
     .from("jobs")
     .update({ status: "expired" })
     .eq("status", "published")
-    .eq("employer_id", UNCLAIMED_PLACEHOLDER_ACCOUNT_ID)
-    .is("claimed_at", null)
+    .is("employer_id", null)
     .lte("created_at", unclaimedCutoff)
     .select("id");
 
-  return NextResponse.json({ remindersSent: jobsByEmployer.size, listingsExpired: expired?.length ?? 0, unclaimedExpired: unclaimedExpired?.length ?? 0 });
+  const pendingCutoff = new Date(now.getTime() - PENDING_SUBMISSION_MAX_AGE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const { data: expiredJobSubmissions } = await admin
+    .from("pending_job_submissions")
+    .delete()
+    .is("confirmed_at", null)
+    .lte("created_at", pendingCutoff)
+    .select("id");
+  const { data: expiredCandidateSubmissions } = await admin
+    .from("pending_candidate_submissions")
+    .delete()
+    .is("confirmed_at", null)
+    .lte("created_at", pendingCutoff)
+    .select("id");
+
+  return NextResponse.json({
+    remindersSent: jobsByEmployer.size,
+    listingsExpired: expired?.length ?? 0,
+    unclaimedExpired: unclaimedExpired?.length ?? 0,
+    pendingSubmissionsSwept: (expiredJobSubmissions?.length ?? 0) + (expiredCandidateSubmissions?.length ?? 0),
+  });
 }

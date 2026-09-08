@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { findOrCreateAccount, signInWithLink } from "@/lib/auth-confirm";
 import { notifyNewApplication } from "@/lib/notify";
 
 const SITE_URL = "https://findjobsnearby.com";
@@ -28,24 +28,15 @@ export async function GET(request: Request) {
   const payload = pending.payload as Record<string, unknown>;
   const email = pending.email;
 
-  // Same find-or-create-and-sign-in pattern as US-70's confirm route. If an
-  // account already exists for this email (returning candidate, or even a
-  // registered employer applying somewhere themselves), this attaches the
-  // new profile and application to that same account rather than creating a
-  // duplicate -- and never overwrites whatever role it already has.
-  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({ type: "magiclink", email, options: { data: { role: "candidate" } } });
-  if (linkError || !linkData.user) {
+  // If an account already exists for this email (returning candidate, or
+  // even a registered employer applying somewhere themselves), this attaches
+  // the new profile and application to that same account rather than
+  // creating a duplicate -- and never overwrites whatever role it already has.
+  const found = await findOrCreateAccount(admin, email, "candidate");
+  if (!found) {
     return NextResponse.redirect(`${base}/jobs?confirmError=account`);
   }
-  const userId = linkData.user.id;
-
-  const { data: account } = await admin.from("accounts").select("id").eq("id", userId).maybeSingle();
-  if (!account) {
-    const { error: accountError } = await admin.from("accounts").insert({ id: userId, role: "candidate" });
-    if (accountError) {
-      return NextResponse.redirect(`${base}/jobs?confirmError=account`);
-    }
-  }
+  const { userId, linkData } = found;
 
   const { data: profile, error: profileError } = await admin.from("candidate_profiles").insert({
     candidate_id: userId,
@@ -98,10 +89,7 @@ export async function GET(request: Request) {
     // notification shouldn't block the candidate from landing signed in.
   }
 
-  // Sign the browser in as a real session, same verification_type handling
-  // already fixed for US-70/US-64-69's confirm routes.
-  const supabase = await createSupabaseServerClient();
-  await supabase.auth.verifyOtp({ token_hash: linkData.properties.hashed_token, type: linkData.properties.verification_type as "magiclink" | "signup" });
+  await signInWithLink(linkData);
 
   return NextResponse.redirect(`${base}/account?applied=1`);
 }

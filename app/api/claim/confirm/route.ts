@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { UNCLAIMED_PLACEHOLDER_ACCOUNT_ID } from "@/lib/unclaimed-listings";
+import { findOrCreateAccount, signInWithLink } from "@/lib/auth-confirm";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -33,20 +32,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "A valid email is required to claim this listing." }, { status: 400 });
   }
 
-  // Same find-or-create-and-sign-in pattern as US-70's confirm route.
-  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({ type: "magiclink", email, options: { data: { role: "employer" } } });
-  if (linkError || !linkData.user) {
+  const found = await findOrCreateAccount(admin, email, "employer");
+  if (!found) {
     return NextResponse.json({ error: "Could not set up your account. Try again in a moment." }, { status: 500 });
   }
-  const userId = linkData.user.id;
-
-  const { data: account } = await admin.from("accounts").select("id").eq("id", userId).maybeSingle();
-  if (!account) {
-    const { error: accountError } = await admin.from("accounts").insert({ id: userId, role: "employer" });
-    if (accountError) {
-      return NextResponse.json({ error: "Could not set up your account. Try again in a moment." }, { status: 500 });
-    }
-  }
+  const { userId, linkData } = found;
 
   // US-66: this is the whole transfer -- once employer_id points at the real
   // account, every existing feature (edit, applicants, messaging, unlocks)
@@ -58,8 +48,7 @@ export async function POST(request: Request) {
     .from("jobs")
     .update({ employer_id: userId, claimed_at: new Date().toISOString(), claim_token: null })
     .eq("id", job.id)
-    .eq("employer_id", UNCLAIMED_PLACEHOLDER_ACCOUNT_ID)
-    .is("claimed_at", null)
+    .is("employer_id", null)
     .select("id")
     .maybeSingle();
 
@@ -67,8 +56,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "This listing may have already been claimed." }, { status: 409 });
   }
 
-  const supabase = await createSupabaseServerClient();
-  await supabase.auth.verifyOtp({ token_hash: linkData.properties.hashed_token, type: linkData.properties.verification_type as "magiclink" | "signup" });
+  await signInWithLink(linkData);
 
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllJobs, jobHref } from "@/lib/jobs-data";
-import { TX_METROS, citySlug, categorySlug, CATEGORIES } from "@/lib/geo";
+import { DFW_METRO_CITIES, citySlug, categorySlug, CATEGORIES } from "@/lib/geo";
 import { blogPosts } from "@/lib/blog";
 import { guides } from "@/lib/guides";
 
@@ -32,14 +32,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority,
   }));
 
-  const cityEntries: MetadataRoute.Sitemap = TX_METROS.map((city) => ({
+  // Go-to-market starts DFW-only (lib/geo.ts) -- the other TX metros already
+  // have working city/category pages (reachable, just not yet in the
+  // sitemap), but submitting ~60 mostly-empty city x category combos for
+  // metros with zero real inventory was very likely choking crawl budget
+  // for a 4-day-old domain with no authority yet. Re-add the rest of
+  // TX_METROS here once there's real inventory outside DFW.
+  const cityEntries: MetadataRoute.Sitemap = DFW_METRO_CITIES.map((city) => ({
     url: `https://findjobsnearby.com/jobs/${citySlug(city, "TX")}`,
     lastModified: now,
     changeFrequency: "daily",
     priority: 0.8,
   }));
 
-  const cityCategoryEntries: MetadataRoute.Sitemap = TX_METROS.flatMap((city) =>
+  const cityCategoryEntries: MetadataRoute.Sitemap = DFW_METRO_CITIES.flatMap((city) =>
     CATEGORIES.map((category) => ({
       url: `https://findjobsnearby.com/jobs/${citySlug(city, "TX")}/${categorySlug(category)}`,
       lastModified: now,

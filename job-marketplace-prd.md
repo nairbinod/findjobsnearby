@@ -56,6 +56,7 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
   - *AC:* Clicking the confirmation link both signs the employer in (a normal persistent account and session, same mechanism as the existing magic-link sign-in) and publishes the listing in the same step — no separate account-creation screen afterward.
   - *AC:* Already-signed-in employers are unaffected and continue to publish instantly (US-2 through US-5) — this is an additional entry point, not a replacement.
   - *AC:* Unconfirmed submissions are capped per email in a rolling window, since this is the one path in the product reachable with no account and no session.
+  - *AC:* An unconfirmed submission is purged after 7 days rather than kept indefinitely — its confirmation link simply stops working past that point, same as the cap above exists to keep this account-free path from accumulating abandoned data.
 - **US-54:** As an employer, I want to edit a published listing's details, so I can fix mistakes or update information without re-posting from scratch.
   - *AC:* Same guardrails as original posting apply (§5) — pay range still required, 3–5 responsibilities, no contact info. Edits take effect immediately; no separate admin review, matching the original posting flow's own-approval model.
 - **US-55:** As an employer, I want to close a listing before it expires, so candidates stop applying to a role I've already filled.
@@ -103,7 +104,7 @@ Applies to many jobs, frustrated by long forms and reposted/fake listings, wants
   - *AC:* The profile and application save in a pending state on submission, not visible to the employer, until confirmed by email. If that email already belongs to an existing account, the new profile and application attach to that account instead of creating a duplicate.
   - *AC:* Clicking the confirmation link both signs the candidate in (a normal persistent account and session, same mechanism as US-70) and submits the application in the same step, landing them on their account page where they can review or edit this and any past submissions.
   - *AC:* Already-signed-in candidates are unaffected and continue to apply instantly — this is an additional entry point, not a replacement for US-7 through US-10.
-  - *AC:* Unconfirmed submissions are capped per email in a rolling window, matching US-70's own guardrail.
+  - *AC:* Unconfirmed submissions are capped per email in a rolling window, matching US-70's own guardrail, and are purged after 7 days on the same schedule as US-70's.
 
 ### 4.6 Discovering & paying to contact candidates
 
@@ -228,6 +229,24 @@ An extension of founder-assisted seeding (US-35, §4.14) for sourcing real DFW j
   - *AC:* Applications submitted before a claim are preserved and become visible to the employer automatically upon claim — never discarded or silently dropped.
 - **US-69:** As a platform operator, I want unclaimed listings to auto-expire after 14 days, so stale, unverified postings don't accumulate or hurt listing freshness signals (§6).
   - *AC:* Shorter than the standard 30-day expiry (US-31, §4.11) specifically because an unclaimed listing hasn't been verified by anyone who can act on it.
+
+### 4.21 Founder/admin operations toolkit (internal)
+
+Extends US-30's moderation dashboard (§4.10) with the day-to-day account/listing operations a founder needs to handle support requests without touching the database directly.
+
+- **US-72:** As a founder/admin, I want to search and filter all jobs — including by unclaimed status — so I can find and act on a specific listing without querying the database directly.
+  - *AC:* Filterable at minimum by unclaimed status (§4.20: `employer_id` not yet set) alongside the basics — status, city, company/title text match — with enough per-result detail (title, company, city, status, posted date) to identify the right job before acting on it.
+- **US-73:** As a founder/admin, I want to generate a fresh claim link for a job at any time, so I can hand a new link to an employer if the original was lost or never reached them, and correct a listing that was claimed by the wrong person.
+  - *AC:* Regenerating a claim link on an already-unclaimed listing simply issues a new token, invalidating the old one so only one link is ever valid at a time.
+  - *AC:* Running this on an already-claimed listing reverts it to unclaimed (clears `employer_id`/`claimed_at`, matching §4.20's own unclaimed state) before issuing the new link — this is the only path back to unclaimed once claimed, and exists for correcting a wrongful claim.
+- **US-74:** As a founder/admin, I want to disable any job listing directly, so I can act on a listing independent of the flag/dispute queue — an employer request, a legal concern, spam nobody's flagged yet.
+  - *AC:* Uses the same "closed" state an employer can put their own listing into (US-55, §4.1): removed from search/browse immediately, its URL still resolves but shows "no longer accepting applications," and existing applications/unlocks stay visible as a historical record rather than disappearing.
+- **US-75:** As a founder/admin, I want to disable a specific application, so I can act on a candidate's or employer's removal request, or on a fraudulent/spam submission, without deleting the underlying record.
+  - *AC:* Uses the same withdrawn state a candidate can put their own application into (US-56, §4.10) — marked withdrawn, not deleted, and still visible as such to an employer who already reviewed or paid to unlock it.
+- **US-76:** As a founder/admin, I want to reset an employer's profile-view standing — their free-view count or a specific paid unlock — so I can resolve a support request or dispute without a database change.
+  - *AC:* Covers both: restoring free views for an employer account (US-53, §4.6) and revoking one specific paid unlock (US-16, §4.6) so that candidate's profile requires payment again — these are two distinct, individually-targeted actions, not a single blanket reset.
+- **US-77:** As a founder/admin, I want these operations to live in one internal area alongside US-30's existing moderation dashboard, so day-to-day support and moderation keep growing in one place rather than as one-off scripts or direct database edits.
+  - *AC:* New admin capabilities identified after this point are added to this same surface by default.
 
 ---
 

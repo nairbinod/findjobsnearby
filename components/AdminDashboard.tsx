@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import AdminJobsPanel from "@/components/AdminJobsPanel";
+import AdminEmployerLookup from "@/components/AdminEmployerLookup";
 
 type Flag = { id: string; target_type: "job" | "profile"; target_id: string; reason: string; status: string; created_at: string; label?: string };
 type UnverifiedEmployer = { id: string; display_name: string | null; phone: string | null; phone_verified_at: string | null; created_at: string };
@@ -78,12 +80,23 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[var(--cream)]">
       <header className="mx-auto flex max-w-[1100px] items-center justify-between px-6 py-6 lg:px-10">
         <Link href="/" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></Link>
-        <div className="flex items-center gap-4"><Link href="/admin/seed" className="text-sm font-bold text-[var(--muted)]">Seed a listing <span aria-hidden="true">→</span></Link><span className="rounded-full bg-[var(--ink)] px-4 py-2 text-xs font-bold uppercase text-white">Admin</span></div>
+        <div className="flex items-center gap-4"><Link href="/admin/seed" className="text-sm font-bold text-[var(--muted)]">Post a listing <span aria-hidden="true">→</span></Link><span className="rounded-full bg-[var(--ink)] px-4 py-2 text-xs font-bold uppercase text-white">Admin</span></div>
       </header>
       <main className="mx-auto max-w-[1100px] px-6 pb-20 pt-6 lg:px-10">
         <h1 className="display text-4xl font-bold">Moderation dashboard</h1>
+        <section className="mt-8 flex items-center justify-between gap-4 rounded-2xl border-2 border-[var(--ink)] bg-white p-6">
+          <div>
+            <h2 className="text-xl font-bold">Post a listing</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">Seed a job from a public post on a business&apos;s behalf — publishes immediately as Unclaimed until they claim it.</p>
+          </div>
+          <Link href="/admin/seed" className="whitespace-nowrap rounded-full bg-[var(--coral)] px-5 py-3 text-sm font-bold text-white">Post a listing <span aria-hidden="true">→</span></Link>
+        </section>
         {loading ? <p className="mt-8 text-[var(--muted)]">Loading...</p> : (
           <div className="mt-10 space-y-14">
+            <AdminJobsPanel />
+
+            <AdminEmployerLookup />
+
             <section>
               <h2 className="text-xl font-bold">Flagged content <span className="text-sm font-normal text-[var(--muted)]">({flags.length} open)</span></h2>
               {flags.length === 0 ? <p className="mt-4 text-sm text-[var(--muted)]">Nothing flagged right now.</p> : (

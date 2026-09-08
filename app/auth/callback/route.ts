@@ -35,12 +35,18 @@ export async function GET(request: Request) {
 
         const referralCode = (await cookies()).get(REFERRAL_COOKIE)?.value;
         if (referralCode) await recordReferral(supabase, referralCode, data.user.id);
-      } else if (account.role !== selectedRole) {
+      } else if (account.role !== selectedRole && account.role !== "admin") {
         // A returning user picked the other role toggle -- e.g. someone who
         // first signed up to browse jobs (candidate) now wants to post one
         // (employer). Without this, they'd be silently stuck as whatever
         // role they picked the very first time, with jobs inserts failing
         // RLS forever.
+        //
+        // "admin" is excluded: it's not one of the two toggle options on
+        // /auth at all (only candidate/employer), so selectedRole can never
+        // legitimately be "admin" here -- without this guard, any admin
+        // account got silently downgraded the moment they used a normal
+        // sign-in link instead of the founder-assigned role sticking.
         await supabase.from("accounts").update({ role: selectedRole }).eq("id", data.user.id);
       }
     }
