@@ -49,8 +49,11 @@ export default function AuthNav({ defaultAuthHref = "/applicant/auth" }: AuthNav
     return <Link href={defaultAuthHref} className="text-sm font-semibold text-[var(--muted)]">Sign in</Link>;
   }
 
-  const dashboardHref = role === "employer" ? "/employer" : "/account";
-  const dashboardLabel = role === "employer" ? "My jobs" : "My account";
+  // "admin" falling through to the employer/candidate cases below would
+  // send a founder/admin account to /account with no visible sign they're
+  // signed in as admin at all -- this was reported live (US-30/§4.21).
+  const dashboardHref = role === "admin" ? "/admin" : role === "employer" ? "/employer" : "/account";
+  const dashboardLabel = role === "admin" ? "Admin dashboard" : role === "employer" ? "My jobs" : "My account";
 
   return (
     <div className="flex items-center gap-4 text-sm font-semibold">

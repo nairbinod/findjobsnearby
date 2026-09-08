@@ -12,6 +12,8 @@ export async function GET(request: Request) {
   // signal this route has -- defaults to the applicant page otherwise.
   const authPage = next === "/employer" ? "/employer/auth" : "/applicant/auth";
 
+  let destination = next;
+
   if (code) {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -25,6 +27,12 @@ export async function GET(request: Request) {
     if (data.user) {
       const selectedRole = data.user.user_metadata.role ?? "candidate";
       const { data: account } = await supabase.from("accounts").select("id, role").eq("id", data.user.id).maybeSingle();
+
+      // An admin signing in through either role-specific page still lands
+      // on /admin -- neither page has an "admin" option to pick, so `next`
+      // here is always /account or /employer, which would otherwise hide
+      // that this is an admin account behind an ordinary-looking dashboard.
+      if (account?.role === "admin") destination = "/admin";
 
       if (!account) {
         const { error: accountError } = await supabase.from("accounts").insert({
@@ -56,5 +64,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(new URL(next, requestUrl.origin));
+  return NextResponse.redirect(new URL(destination, requestUrl.origin));
 }
