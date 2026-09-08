@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import AdminJobsPanel from "@/components/AdminJobsPanel";
 import AdminEmployerLookup from "@/components/AdminEmployerLookup";
+import AdminSubscribersPanel from "@/components/AdminSubscribersPanel";
 
 type Flag = { id: string; target_type: "job" | "profile"; target_id: string; reason: string; status: string; created_at: string; label?: string };
 type UnverifiedEmployer = { id: string; display_name: string | null; phone: string | null; phone_verified_at: string | null; created_at: string };
@@ -96,6 +97,8 @@ export default function AdminDashboard() {
             <AdminJobsPanel />
 
             <AdminEmployerLookup />
+
+            <AdminSubscribersPanel />
 
             <section>
               <h2 className="text-xl font-bold">Flagged content <span className="text-sm font-normal text-[var(--muted)]">({flags.length} open)</span></h2>

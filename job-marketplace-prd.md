@@ -247,6 +247,9 @@ Extends US-30's moderation dashboard (§4.10) with the day-to-day account/listin
   - *AC:* Covers both: restoring free views for an employer account (US-53, §4.6) and revoking one specific paid unlock (US-16, §4.6) so that candidate's profile requires payment again — these are two distinct, individually-targeted actions, not a single blanket reset.
 - **US-77:** As a founder/admin, I want these operations to live in one internal area alongside US-30's existing moderation dashboard, so day-to-day support and moderation keep growing in one place rather than as one-off scripts or direct database edits.
   - *AC:* New admin capabilities identified after this point are added to this same surface by default.
+- **US-78:** As a founder/admin, I want to see the applicants for any job and the current job-alert (US-52, §4.9) and newsletter (US-49, §4.18) subscriber lists, so I can review platform activity and handle support requests without a database connection.
+  - *AC:* Applicant visibility reuses US-72's job search (find the job, then see who applied) rather than a separate global applicant list.
+  - *AC:* Both subscriber lists show each entry's subscribed/unsubscribed status, not just active subscribers, since a support request may be about someone who already unsubscribed.
 
 ---
 
