@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-export default function AuthNav() {
+type AuthNavProps = { defaultAuthHref?: string };
+
+export default function AuthNav({ defaultAuthHref = "/applicant/auth" }: AuthNavProps) {
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
@@ -44,7 +46,7 @@ export default function AuthNav() {
   if (!loaded) return null;
 
   if (!email) {
-    return <Link href="/auth" className="text-sm font-semibold text-[var(--muted)]">Sign in</Link>;
+    return <Link href={defaultAuthHref} className="text-sm font-semibold text-[var(--muted)]">Sign in</Link>;
   }
 
   const dashboardHref = role === "employer" ? "/employer" : "/account";

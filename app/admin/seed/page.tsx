@@ -18,7 +18,7 @@ export default async function AdminSeedPage() {
         <main className="mx-auto max-w-[600px] px-6 py-20 text-center">
           <h1 className="display text-4xl font-bold">Admin access only</h1>
           <p className="mt-4 text-[var(--muted)]">Sign in with an admin account to seed a listing.</p>
-          <Link href="/auth" className="mt-6 inline-block rounded-full bg-[var(--coral)] px-6 py-3 text-sm font-bold text-white">Sign in <span aria-hidden="true">→</span></Link>
+          <Link href="/employer/auth" className="mt-6 inline-block rounded-full bg-[var(--coral)] px-6 py-3 text-sm font-bold text-white">Sign in <span aria-hidden="true">→</span></Link>
         </main>
       </div>
     );

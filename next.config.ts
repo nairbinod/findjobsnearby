@@ -2,7 +2,14 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    return [
+      // The combined candidate/employer toggle page is retired in favor of
+      // two dedicated sign-in URLs (app/applicant/auth, app/employer/auth) --
+      // this keeps any old bookmarks/links pointed at /auth working.
+      { source: "/auth", destination: "/applicant/auth", permanent: true },
+    ];
+  },
 };
 
 // authToken comes from SENTRY_AUTH_TOKEN (a secret -- never hardcode it here).

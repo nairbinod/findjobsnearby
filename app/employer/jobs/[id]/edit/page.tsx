@@ -8,7 +8,7 @@ export default async function EditJobPage({ params }: EditJobPageProps) {
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) redirect("/auth");
+  if (!userData.user) redirect("/employer/auth");
 
   // .eq("employer_id", ...) here is defense in depth on top of RLS --
   // "Employers manage their own jobs" already scopes this, but an explicit

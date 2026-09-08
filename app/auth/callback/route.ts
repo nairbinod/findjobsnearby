@@ -7,13 +7,17 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const next = requestUrl.searchParams.get("next") ?? "/account";
+  // Sign-in errors bounce back to whichever of the two dedicated auth pages
+  // this attempt started from, inferred from `next` since that's the only
+  // signal this route has -- defaults to the applicant page otherwise.
+  const authPage = next === "/employer" ? "/employer/auth" : "/applicant/auth";
 
   if (code) {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      const errorUrl = new URL("/auth", requestUrl.origin);
+      const errorUrl = new URL(authPage, requestUrl.origin);
       errorUrl.searchParams.set("error", error.message);
       return NextResponse.redirect(errorUrl);
     }
@@ -28,7 +32,7 @@ export async function GET(request: Request) {
           role: selectedRole,
         });
         if (accountError) {
-          const errorUrl = new URL("/auth", requestUrl.origin);
+          const errorUrl = new URL(authPage, requestUrl.origin);
           errorUrl.searchParams.set("error", accountError.message);
           return NextResponse.redirect(errorUrl);
         }
@@ -42,11 +46,11 @@ export async function GET(request: Request) {
         // role they picked the very first time, with jobs inserts failing
         // RLS forever.
         //
-        // "admin" is excluded: it's not one of the two toggle options on
-        // /auth at all (only candidate/employer), so selectedRole can never
-        // legitimately be "admin" here -- without this guard, any admin
-        // account got silently downgraded the moment they used a normal
-        // sign-in link instead of the founder-assigned role sticking.
+        // "admin" is excluded: neither /applicant/auth nor /employer/auth
+        // ever sets role to "admin", so selectedRole can never legitimately
+        // be "admin" here -- without this guard, any admin account got
+        // silently downgraded the moment they used a normal sign-in link
+        // instead of the founder-assigned role sticking.
         await supabase.from("accounts").update({ role: selectedRole }).eq("id", data.user.id);
       }
     }
