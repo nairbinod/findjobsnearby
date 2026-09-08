@@ -13,6 +13,28 @@ type ArticleLayoutProps = {
   afterArticle?: ReactNode;
 };
 
+// A minimal `[label](/href)` markdown-link syntax for paragraph text --
+// content here is hardcoded copy (lib/blog.ts, lib/guides.ts), never user
+// input, so this stays a plain string parse rather than needing a full
+// markdown/HTML pipeline or dangerouslySetInnerHTML.
+const LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+function renderParagraph(paragraph: string): ReactNode {
+  const parts: ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+  LINK_PATTERN.lastIndex = 0;
+  while ((match = LINK_PATTERN.exec(paragraph))) {
+    if (match.index > lastIndex) parts.push(paragraph.slice(lastIndex, match.index));
+    const [, label, href] = match;
+    parts.push(<Link key={key++} href={href} className="font-semibold text-[var(--coral)] underline underline-offset-2">{label}</Link>);
+    lastIndex = LINK_PATTERN.lastIndex;
+  }
+  if (lastIndex < paragraph.length) parts.push(paragraph.slice(lastIndex));
+  return parts;
+}
+
 export default function ArticleLayout({ eyebrow, title, description, publishedLabel, sections, backHref, backLabel, afterArticle }: ArticleLayoutProps) {
   return (
     <div className="min-h-screen bg-[var(--cream)]">
@@ -31,7 +53,7 @@ export default function ArticleLayout({ eyebrow, title, description, publishedLa
               <section key={section.heading}>
                 <h2 className="display text-2xl font-bold sm:text-3xl">{section.heading}</h2>
                 <div className="mt-4 space-y-4 text-base leading-8 text-[var(--ink)]/75">
-                  {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                  {section.paragraphs.map((paragraph) => <p key={paragraph}>{renderParagraph(paragraph)}</p>)}
                 </div>
               </section>
             ))}

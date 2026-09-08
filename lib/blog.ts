@@ -19,7 +19,7 @@ export const blogPosts: BlogPost[] = [
         heading: "A job board, not a garage sale with a jobs tab",
         paragraphs: [
           "Open Facebook Marketplace to post a job and you're in the same place someone else is listing a used couch, a car, or a bike. Jobs are one category buried inside a general classifieds app — which means the people scrolling through it aren't necessarily job hunting, they're browsing whatever's for sale nearby, and your opening happens to be mixed in.",
-          "FindJobsNearBy only does one thing: local jobs. Every visitor is either hiring or looking for work, and that focus is the whole point — a listing doesn't have to compete with a dining table for attention from someone actually in the market for a shift.",
+          "FindJobsNearBy only does one thing: local jobs. Every visitor is either hiring or [looking for work nearby](/jobs), and that focus is the whole point — a listing doesn't have to compete with a dining table for attention from someone actually in the market for a shift.",
         ],
       },
       {
@@ -41,6 +41,7 @@ export const blogPosts: BlogPost[] = [
         paragraphs: [
           "Posting or applying on Marketplace means doing it from a personal Facebook account — the same one with your friends, your photos, and whatever else you've ever posted, now attached to a hiring conversation with a stranger. Plenty of people, on both sides, would rather keep those separate.",
           "Posting or applying here only ever needs an email — no personal account to log into, no profile to expose beyond what you chose to share for this one purpose. Posting stays free, applying stays free, and the only time money changes hands is when an employer is ready to unlock a specific candidate's full profile and start a real conversation.",
+          "Ready to see it for yourself? [Post a job for free](/post) if you're hiring, or [browse open roles near you](/jobs) if you're not — and if you want the fuller case for why small business hiring needs its own kind of tool, [read the story behind FindJobsNearBy](/blog/small-business-hiring-is-different).",
         ],
       },
     ],
