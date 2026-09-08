@@ -10,6 +10,42 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "facebook-marketplace-jobs-vs-findjobsnearby",
+    title: "Why post here instead of Facebook Marketplace?",
+    description: "Facebook Marketplace was built for selling a couch, not filling a shift. Here's what a job board built for hiring actually gets you.",
+    publishedAt: "2026-09-08",
+    sections: [
+      {
+        heading: "A job board, not a garage sale with a jobs tab",
+        paragraphs: [
+          "Open Facebook Marketplace to post a job and you're in the same place someone else is listing a used couch, a car, or a bike. Jobs are one category buried inside a general classifieds app — which means the people scrolling through it aren't necessarily job hunting, they're browsing whatever's for sale nearby, and your opening happens to be mixed in.",
+          "FindJobsNearBy only does one thing: local jobs. Every visitor is either hiring or looking for work, and that focus is the whole point — a listing doesn't have to compete with a dining table for attention from someone actually in the market for a shift.",
+        ],
+      },
+      {
+        heading: "A real application, not a Messenger thread",
+        paragraphs: [
+          "On Marketplace, \"applying\" usually means sending a Messenger DM, and \"reviewing applicants\" means scrolling back through a chat list trying to remember who said what. There's no structured profile, no consistent way to see availability or experience side by side, and nothing stopping the conversation from trailing off into other things Messenger is used for.",
+          "Here, a candidate fills out the same short set of questions every time — role, availability, work history, desired pay — and an employer sees every applicant to a listing in one place, in the same format, with an optional checklist showing exactly which requirements each person says they meet. It's built to compare people, not just to message them.",
+        ],
+      },
+      {
+        heading: "Built to be found on Google, not just inside one app",
+        paragraphs: [
+          "A Marketplace listing mostly lives and dies inside Facebook's own app — it isn't built to surface in a Google search for \"restaurant jobs near me,\" and someone without an active Facebook account never sees it at all. That's a real ceiling on how many nearby candidates a listing can actually reach.",
+          "Every listing on FindJobsNearBy is a real, indexable web page with the structured data Google looks for to surface local job postings — no account required to browse, and no walled garden between a listing and the search engine most people actually start with.",
+        ],
+      },
+      {
+        heading: "No personal profile required, on either side",
+        paragraphs: [
+          "Posting or applying on Marketplace means doing it from a personal Facebook account — the same one with your friends, your photos, and whatever else you've ever posted, now attached to a hiring conversation with a stranger. Plenty of people, on both sides, would rather keep those separate.",
+          "Posting or applying here only ever needs an email — no personal account to log into, no profile to expose beyond what you chose to share for this one purpose. Posting stays free, applying stays free, and the only time money changes hands is when an employer is ready to unlock a specific candidate's full profile and start a real conversation.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "small-business-hiring-is-different",
     title: "Small business hiring is different — so the tool for it should be too",
     description: "Why a restaurant, salon, or repair shop filling one open role doesn't need the same tool as a company running a recruiting pipeline.",
