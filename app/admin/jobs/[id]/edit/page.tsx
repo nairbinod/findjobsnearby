@@ -33,11 +33,11 @@ export default async function AdminEditJobPage({ params }: AdminEditJobPageProps
 
   const { data: job } = await supabase
     .from("jobs")
-    .select("id, title, company_name, city, address, urgent, pay_range, employment_type, category, responsibilities, requirements, status")
+    .select("id, title, company_name, city, address, urgent, pay_range, employment_type, category, responsibilities, requirements, status, seed_contact_email, seed_source_note")
     .eq("id", id)
     .maybeSingle();
 
   if (!job) notFound();
 
-  return <EditJobForm job={job} backHref="/admin" backLabel="Back to admin dashboard" ownerErrorMessage="Could not save -- this listing may have been removed." />;
+  return <EditJobForm job={job} backHref="/admin" backLabel="Back to admin dashboard" ownerErrorMessage="Could not save -- this listing may have been removed." showSeedFields />;
 }

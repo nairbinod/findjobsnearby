@@ -28,6 +28,8 @@ type ExistingJob = {
   responsibilities: string[];
   requirements: string[] | null;
   status: string;
+  seed_contact_email?: string | null;
+  seed_source_note?: string | null;
 };
 
 type EditJobFormProps = {
@@ -41,9 +43,14 @@ type EditJobFormProps = {
   backHref?: string;
   backLabel?: string;
   ownerErrorMessage?: string;
+  // Seed contact email/source note (US-64/65) only exist on founder-seeded
+  // listings and are only ever meaningful from the admin edit route -- an
+  // employer editing their own self-posted job has neither field and
+  // shouldn't see a section for them.
+  showSeedFields?: boolean;
 };
 
-export default function EditJobForm({ job, backHref = "/employer", backLabel = "Back to dashboard", ownerErrorMessage = "Could not save -- this listing may no longer belong to your account." }: EditJobFormProps) {
+export default function EditJobForm({ job, backHref = "/employer", backLabel = "Back to dashboard", ownerErrorMessage = "Could not save -- this listing may no longer belong to your account.", showSeedFields = false }: EditJobFormProps) {
   const [title, setTitle] = useState(job.title);
   const [companyName, setCompanyName] = useState(job.company_name);
   const [pay, setPay] = useState(job.pay_range);
@@ -57,6 +64,8 @@ export default function EditJobForm({ job, backHref = "/employer", backLabel = "
   const [requirementQuestions, setRequirementQuestions] = useState<string[]>(job.requirements ?? []);
   const [suggestedPreferred, setSuggestedPreferred] = useState<string[]>([]);
   const [selectedPreferred, setSelectedPreferred] = useState<Set<string>>(new Set());
+  const [contactEmail, setContactEmail] = useState(job.seed_contact_email ?? "");
+  const [sourceNote, setSourceNote] = useState(job.seed_source_note ?? "");
 
   const [draft, setDraft] = useState(false);
   const [drafting, setDrafting] = useState(false);
@@ -126,6 +135,7 @@ export default function EditJobForm({ job, backHref = "/employer", backLabel = "
       responsibilities: responsibilityList,
       requirements: finalRequirements.length > 0 ? finalRequirements : null,
       description: aiDescription,
+      ...(showSeedFields ? { seed_contact_email: contactEmail.trim() || null, seed_source_note: sourceNote.trim() || null } : {}),
     }).eq("id", job.id).select("id");
 
     // A Supabase update that RLS silently filters out (0 matching rows)
@@ -182,6 +192,13 @@ export default function EditJobForm({ job, backHref = "/employer", backLabel = "
               <label className="flex items-center gap-3 text-sm font-bold"><input type="checkbox" checked={urgent} onChange={(event) => setUrgent(event.target.checked)} className="h-5 w-5 rounded border-[var(--line)] accent-[var(--coral)]" />Mark as Urgently Hiring<span className="font-normal text-[var(--muted)]">— adds a badge to your listing</span></label>
               <label className="block text-sm font-bold">What will they do?<span className="mt-1 block text-xs font-normal text-[var(--muted)]">3-5 responsibilities, one per line. {responsibilities.split("\n").map((item) => item.trim()).filter(Boolean).length}/5</span><textarea required value={responsibilities} onChange={(event) => setResponsibilities(event.target.value)} rows={5} className="mt-2 w-full resize-none rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
               <label className="block text-sm font-bold">Requirements <span className="font-normal text-[var(--muted)]">(optional)</span><span className="mt-1 block text-xs font-normal text-[var(--muted)]">Up to 6, one per line. {requirements.split("\n").map((item) => item.trim()).filter(Boolean).length}/6</span><textarea value={requirements} onChange={(event) => setRequirements(event.target.value)} rows={3} className="mt-2 w-full resize-none rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
+              {showSeedFields && (
+                <div className="space-y-5 border-t border-[var(--line)] pt-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Founder seeding (US-64/65)</p>
+                  <label className="block text-sm font-bold">Business contact email <span className="font-normal text-[var(--muted)]">(optional)</span><input type="email" value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} placeholder="If known -- used for the claim email" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /><span className="mt-1 block text-xs font-normal text-[var(--muted)]">Doesn&apos;t change or resend the claim link -- only where a future claim-link email would go.</span></label>
+                  <label className="block text-sm font-bold">Source note <span className="font-normal text-[var(--muted)]">(internal only, never shown publicly)</span><input value={sourceNote} onChange={(event) => setSourceNote(event.target.value)} placeholder="e.g. Facebook post, [business] page, 9/7/2026" className="mt-2 w-full rounded-xl border border-[var(--line)] px-4 py-3 font-normal outline-none focus:border-[var(--coral)]" /></label>
+                </div>
+              )}
             </div>
             <button type="submit" disabled={drafting} className="mt-8 w-full rounded-full bg-[var(--coral)] px-6 py-4 font-bold text-white shadow-[0_6px_0_#ce5a4b] disabled:opacity-60">{drafting ? "Drafting update..." : "Draft update"} <span aria-hidden="true">→</span></button>
             {!drafting && message && !draft && <p role="status" className="mt-4 text-sm leading-5 text-[var(--coral)]">{message}</p>}
