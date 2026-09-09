@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { unwrapEmbed } from "@/lib/postgrest";
 
@@ -146,6 +147,7 @@ export default function AdminJobsPanel() {
                   {job.employer_id && <p className="mt-1 text-xs text-[var(--muted)]">Employer ID: <span className="select-all font-mono">{job.employer_id}</span></p>}
                 </div>
                 <div className="flex flex-wrap gap-3 text-xs font-bold">
+                  <Link href={`/admin/jobs/${job.id}/edit`} className="text-[var(--ink)]">Edit</Link>
                   {job.status === "published" && <button onClick={() => void disableJob(job.id)} className="text-[var(--coral)]">Disable</button>}
                   <button onClick={() => void generateClaimLink(job.id, job.employer_id !== null)} className="text-[var(--ink)]">{job.employer_id === null ? "New claim link" : "Revert to unclaimed"}</button>
                   <button onClick={() => void toggleApplications(job.id)} className="text-[var(--muted)]">{expandedJobId === job.id ? "Hide applications" : "View applications"}</button>

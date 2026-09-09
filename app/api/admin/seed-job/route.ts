@@ -16,6 +16,7 @@ type SeedPayload = {
   employmentType: string;
   category: string;
   responsibilities: string[];
+  requirements: string[];
   description: string;
   contactEmail: string | null;
   sourceNote: string;
@@ -34,6 +35,7 @@ function isValidPayload(body: unknown): body is SeedPayload {
     typeof b.category === "string" &&
     Array.isArray(b.responsibilities) && b.responsibilities.every((item) => typeof item === "string") &&
     b.responsibilities.length >= 3 && b.responsibilities.length <= 5 &&
+    Array.isArray(b.requirements) && b.requirements.every((item) => typeof item === "string") && b.requirements.length <= 6 &&
     typeof b.description === "string" && b.description.trim().length > 0 &&
     (b.contactEmail === null || (typeof b.contactEmail === "string" && EMAIL_RE.test(b.contactEmail))) &&
     typeof b.sourceNote === "string"
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
   if (!isValidPayload(body)) {
     return NextResponse.json({ error: "Missing or invalid job details." }, { status: 400 });
   }
-  if (containsContactInfo([body.title, body.companyName, body.description, ...body.responsibilities].join(" "))) {
+  if (containsContactInfo([body.title, body.companyName, body.description, ...body.responsibilities, ...body.requirements].join(" "))) {
     return NextResponse.json({ error: CONTACT_INFO_MESSAGE }, { status: 400 });
   }
 
@@ -72,9 +74,13 @@ export async function POST(request: Request) {
     employment_type: body.employmentType,
     category: body.category,
     responsibilities: body.responsibilities,
+    requirements: body.requirements.length > 0 ? body.requirements : null,
     description: body.description,
     status: "published",
-    ai_assisted: false,
+    // US-79: description/requirements now come from the same AI drafting
+    // (US-3) and must-have extraction (US-62) as an employer's own posting,
+    // not hand-typed -- this should carry the same disclosure as those.
+    ai_assisted: true,
     approved_at: new Date().toISOString(),
     expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     seed_contact_email: body.contactEmail,

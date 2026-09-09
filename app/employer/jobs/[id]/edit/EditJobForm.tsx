@@ -30,7 +30,20 @@ type ExistingJob = {
   status: string;
 };
 
-export default function EditJobForm({ job }: { job: ExistingJob }) {
+type EditJobFormProps = {
+  job: ExistingJob;
+  // Defaults are the employer's own dashboard -- the admin edit page (any
+  // job, including unclaimed ones with no employer to belong to) passes
+  // /admin instead so "back" and the ownership-error wording make sense
+  // there too. The actual save call below never touches employer_id or
+  // claim_token either way -- editing content never changes who owns or
+  // can claim a listing.
+  backHref?: string;
+  backLabel?: string;
+  ownerErrorMessage?: string;
+};
+
+export default function EditJobForm({ job, backHref = "/employer", backLabel = "Back to dashboard", ownerErrorMessage = "Could not save -- this listing may no longer belong to your account." }: EditJobFormProps) {
   const [title, setTitle] = useState(job.title);
   const [companyName, setCompanyName] = useState(job.company_name);
   const [pay, setPay] = useState(job.pay_range);
@@ -122,7 +135,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
     if (error) {
       setMessage(error.message);
     } else if (!data || data.length === 0) {
-      setMessage("Could not save -- this listing may no longer belong to your account.");
+      setMessage(ownerErrorMessage);
     } else {
       setSaved(true);
     }
@@ -139,7 +152,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
           <h1 className="display mt-6 text-4xl font-bold">Changes saved.</h1>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link href={jobUrl} className="rounded-full bg-[var(--coral)] px-6 py-4 text-center font-bold text-white">View listing <span aria-hidden="true">→</span></Link>
-            <Link href="/employer" className="rounded-full border-2 border-[var(--ink)] px-6 py-4 text-center font-bold">Back to dashboard <span aria-hidden="true">→</span></Link>
+            <Link href={backHref} className="rounded-full border-2 border-[var(--ink)] px-6 py-4 text-center font-bold">{backLabel} <span aria-hidden="true">→</span></Link>
           </div>
         </main>
       </div>
@@ -150,7 +163,7 @@ export default function EditJobForm({ job }: { job: ExistingJob }) {
     <div className="min-h-screen bg-[var(--cream)]">
       <header className="mx-auto flex max-w-[1000px] items-center justify-between px-6 py-6 lg:px-10">
         <Link href="/" className="display text-[25px] font-bold tracking-[-.04em]">findjobs<span className="text-[var(--coral)]">nearby</span><sup className="ml-0.5 text-[10px]">®</sup></Link>
-        <Link href="/employer" className="text-sm font-bold text-[var(--muted)]">Back to dashboard <span aria-hidden="true">→</span></Link>
+        <Link href={backHref} className="text-sm font-bold text-[var(--muted)]">{backLabel} <span aria-hidden="true">→</span></Link>
       </header>
       <main className="mx-auto max-w-[1000px] px-6 pb-20 pt-12 lg:px-10">
         <div className="mb-12 max-w-[650px]">

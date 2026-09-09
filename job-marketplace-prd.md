@@ -250,6 +250,10 @@ Extends US-30's moderation dashboard (§4.10) with the day-to-day account/listin
 - **US-78:** As a founder/admin, I want to see the applicants for any job and the current job-alert (US-52, §4.9) and newsletter (US-49, §4.18) subscriber lists, so I can review platform activity and handle support requests without a database connection.
   - *AC:* Applicant visibility reuses US-72's job search (find the job, then see who applied) rather than a separate global applicant list.
   - *AC:* Both subscriber lists show each entry's subscribed/unsubscribed status, not just active subscribers, since a support request may be about someone who already unsubscribed.
+- **US-79:** As a founder/admin, I want to edit any job's content — including unclaimed listings, which have no employer to hand editing to — using the same AI drafting (US-3) and must-have extraction (US-62) an employer gets when posting, so a seeded listing can be fixed or improved after publishing without hand-typing a raw description.
+  - *AC:* Reachable from US-72's job search (find the job, then edit it) rather than a separate global listing.
+  - *AC:* Editing never changes `employer_id`, `claimed_at`, or `claim_token` — a listing's claimed/unclaimed state and its existing claim link (US-65) are completely unaffected by editing its content. Regenerating the claim link stays US-73's separate, explicit action.
+  - *AC:* Founder-seeded listings (US-64) now go through the same AI drafting and must-have extraction at creation time too, not just when later edited here — matching what an employer gets from US-3/US-62 on their own postings.
 
 ---
 
